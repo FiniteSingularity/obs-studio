@@ -101,7 +101,6 @@ int obs_module_load_metadata(struct obs_module* mod)
 	struct obs_module_metadata* md = NULL;
 
 	// Check if the metadata file exists
-	mod->data_path;
 	struct dstr path = { 0 };
 
 	dstr_copy(&path, mod->data_path);
@@ -733,22 +732,22 @@ void free_module(struct obs_module *mod)
 	bfree(mod->data_path);
 
 	// iterate over mod->sources, free strings, then free mod->sources
-	for (int i = 0; i < mod->sources.num; i++) {
+	for (size_t i = 0; i < mod->sources.num; i++) {
 		bfree(mod->sources.array[i]);
 	}
 	da_free(mod->sources);
 
-	for (int i = 0; i < mod->outputs.num; i++) {
+	for (size_t i = 0; i < mod->outputs.num; i++) {
 		bfree(mod->outputs.array[i]);
 	}
 	da_free(mod->outputs);
 
-	for (int i = 0; i < mod->encoders.num; i++) {
+	for (size_t i = 0; i < mod->encoders.num; i++) {
 		bfree(mod->encoders.array[i]);
 	}
 	da_free(mod->encoders);
 
-	for (int i = 0; i < mod->services.num; i++) {
+	for (size_t i = 0; i < mod->services.num; i++) {
 		bfree(mod->services.array[i]);
 	}
 	da_free(mod->services);
@@ -897,7 +896,6 @@ void obs_register_source_s(const struct obs_source_info *info, size_t size)
 	}
 
 	/* NOTE: The assignment of data.module must occur before memcpy! */
-	const char* modName = loadingModule != NULL ? loadingModule->file : "";
 	if (loadingModule) {
 		data.module = loadingModule;
 		char* source_id = bstrdup(info->id);
@@ -1076,7 +1074,6 @@ void obs_register_encoder_s(const struct obs_encoder_info *info, size_t size)
 
 	REGISTER_OBS_DEF(size, obs_encoder_info, obs->encoder_types, info);
 
-	const char* modName = loadingModule != NULL ? loadingModule->file : "";
 	if (loadingModule) {
 		char* encoder_id = bstrdup(info->id);
 		da_push_back(loadingModule->encoders, &encoder_id);
@@ -1106,7 +1103,6 @@ void obs_register_service_s(const struct obs_service_info *info, size_t size)
 
 	REGISTER_OBS_DEF(size, obs_service_info, obs->service_types, info);
 
-	const char* modName = loadingModule != NULL ? loadingModule->file : "";
 	if (loadingModule) {
 		char* service_id = bstrdup(info->id);
 		da_push_back(loadingModule->services, &service_id);
