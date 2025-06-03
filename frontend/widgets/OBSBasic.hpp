@@ -794,12 +794,13 @@ private:
 	void PMSaveModules();
 	void PMDisableModules();
 	void PMAddModuleTypes();
-	static void PMAddNewModule(void* param, obs_module_t* newModule);
+	static void PMAddNewModule(void *param, obs_module_t *newModule);
+
 public:
-	bool PMSourceDisabled(obs_source_t* source) const;
-	bool PMOutputDisabled(obs_output_t* output) const;
-	bool PMEncoderDisabled(obs_encoder_t* encoder) const;
-	bool PMServiceDisabled(obs_service_t* service) const;
+	bool PMSourceDisabled(obs_source_t *source) const;
+	bool PMOutputDisabled(obs_output_t *output) const;
+	bool PMEncoderDisabled(obs_encoder_t *encoder) const;
+	bool PMServiceDisabled(obs_service_t *service) const;
 
 private slots:
 	void on_actionOpenPluginManager_triggered();
