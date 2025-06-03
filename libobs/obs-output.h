@@ -87,7 +87,7 @@ struct obs_output_info {
 	const char *protocols;
 
 	/* Pointer to module that generated this source */
-	obs_module_t* module;
+	obs_module_t *module;
 };
 
 EXPORT void obs_register_output_s(const struct obs_output_info *info, size_t size);

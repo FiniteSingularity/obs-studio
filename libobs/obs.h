@@ -541,8 +541,7 @@ EXPORT void obs_add_safe_module(const char *name);
  *
  * @param  name  Specifies the module's name (filename sans extension).
  */
-EXPORT void obs_add_core_module(const char* name);
-
+EXPORT void obs_add_core_module(const char *name);
 
 /** Automatically loads all modules from module paths (convenience function) */
 EXPORT void obs_load_all_modules(void);
@@ -608,7 +607,7 @@ EXPORT char *obs_find_module_file(obs_module_t *module, const char *file);
  *
  * @param  name    The name of the module to disable.
  */
-EXPORT void obs_add_disabled_module(const char* name);
+EXPORT void obs_add_disabled_module(const char *name);
 
 // TODO: Document this api call better.
 /**
@@ -617,7 +616,7 @@ EXPORT void obs_add_disabled_module(const char* name);
  * @param  name    The name of the module to check.
  * @return         Boolean to indicate disableableness
  */
-EXPORT bool obs_get_module_allow_disable(const char* name);
+EXPORT bool obs_get_module_allow_disable(const char *name);
 
 /**
  * Returns the path of a plugin module config file (whether it exists or not)
@@ -1004,7 +1003,7 @@ EXPORT void obs_display_size(obs_display_t *display, uint32_t *width, uint32_t *
 EXPORT const char *obs_source_get_display_name(const char *id);
 
 /** Returns a pointer to the module which provides the source */
-EXPORT obs_module_t* obs_source_get_module(const char* id);
+EXPORT obs_module_t *obs_source_get_module(const char *id);
 
 /**
  * Creates a source of the specified type with the specified settings.
