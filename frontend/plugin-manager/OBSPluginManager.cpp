@@ -1,4 +1,4 @@
-#include "ObsPluginManager.hpp"
+#include "OBSPluginManager.hpp"
 
 #include <OBSApp.hpp>
 #include <QVBoxLayout>
