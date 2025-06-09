@@ -22,6 +22,7 @@
 #include "ColorSelect.hpp"
 #include "OBSBasicControls.hpp"
 #include "OBSBasicStats.hpp"
+#include "plugin-manager/OBSPluginManager.hpp"
 #include "VolControl.hpp"
 
 #include <obs-module.h>
@@ -990,8 +991,10 @@ void OBSBasic::OBSInit()
      */
 	RefreshSceneCollections(true);
 
-	PMLoadModules();
-	PMDisableModules();
+	pmController = new OBSPluginManagerController;
+
+	pmController->PMLoadModules();
+	pmController->PMDisableModules();
 
 	blog(LOG_INFO, "---------------------------------");
 	obs_load_all_modules2(&mfi);
@@ -1001,10 +1004,10 @@ void OBSBasic::OBSInit()
 	obs_post_load_modules();
 
 	// Find any new modules and add to Plugin Manager.
-	obs_enum_modules(OBSBasic::PMAddNewModule, this);
+	obs_enum_modules(OBSPluginManagerController::PMAddNewModule, pmController);
 	// Get list of valid module types.
-	PMAddModuleTypes();
-	PMSaveModules();
+	pmController->PMAddModuleTypes();
+	pmController->PMSaveModules();
 
 	BPtr<char *> failed_modules = mfi.failed_modules;
 
@@ -2049,4 +2052,9 @@ OBSPromptResult OBSBasic::PromptForName(const OBSPromptRequest &request, const O
 	}
 
 	return result;
+}
+
+void OBSBasic::on_actionOpenPluginManager_triggered()
+{
+	pmController->OpenPMDialog();
 }

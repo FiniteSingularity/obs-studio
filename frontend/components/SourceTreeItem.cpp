@@ -9,6 +9,8 @@
 #include <QLineEdit>
 #include <QPainter>
 
+#include "plugin-manager/OBSPluginManager.hpp"
+
 #include "moc_SourceTreeItem.cpp"
 
 static inline OBSScene GetCurrentScene()
@@ -89,7 +91,7 @@ SourceTreeItem::SourceTreeItem(SourceTree *tree_, OBSSceneItem sceneitem_) : tre
 	//               The following code is just a simple call to
 	//               turn the disabled source red in the source
 	//               list.
-	if (main->PMSourceDisabled(source)) {
+	if (main->GetPluginManager()->PMSourceDisabled(source)) {
 		label->setStyleSheet("QLabel {color: #FF0000;}");
 	}
 
