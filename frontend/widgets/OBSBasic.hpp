@@ -769,10 +769,10 @@ private slots:
 	 * -------------------------------------
 	 * */
 private:
-	OBSPluginManagerController* pmController;
+	OBSPluginManagerController *pmController;
 
 public:
-	inline OBSPluginManagerController* GetPluginManager() { return pmController; }
+	inline OBSPluginManagerController *GetPluginManager() { return pmController; }
 private slots:
 	void on_actionOpenPluginManager_triggered();
 

@@ -26,7 +26,6 @@ struct OBSModuleInfo {
 	std::vector<std::string> servicesLoaded;
 };
 
-
 class OBSPluginManager : public QDialog {
 	Q_OBJECT
 	std::unique_ptr<Ui::OBSPluginManager> ui;
@@ -51,15 +50,13 @@ private:
 	void PMSaveModules();
 	void PMDisableModules();
 	void PMAddModuleTypes();
-	static void PMAddNewModule(void* param, obs_module_t* newModule);
+	static void PMAddNewModule(void *param, obs_module_t *newModule);
 
 public:
-	bool PMSourceDisabled(obs_source_t* source) const;
-	bool PMOutputDisabled(obs_output_t* output) const;
-	bool PMEncoderDisabled(obs_encoder_t* encoder) const;
-	bool PMServiceDisabled(obs_service_t* service) const;
+	bool PMSourceDisabled(obs_source_t *source) const;
+	bool PMOutputDisabled(obs_output_t *output) const;
+	bool PMEncoderDisabled(obs_encoder_t *encoder) const;
+	bool PMServiceDisabled(obs_service_t *service) const;
 	friend OBSBasic;
 	void OpenPMDialog();
-
-	
 };
