@@ -24,7 +24,7 @@
 
 extern const char *get_module_extension(void);
 
-obs_module_t* loadingModule = NULL;
+obs_module_t *loadingModule = NULL;
 
 static inline int req_func_not_found(const char *name, const char *path)
 {
@@ -96,13 +96,12 @@ static inline char *get_module_name(const char *file)
 extern void reset_win32_symbol_paths(void);
 #endif
 
-int obs_module_load_metadata(struct obs_module* mod)
+int obs_module_load_metadata(struct obs_module *mod)
 {
-	struct obs_module_metadata* md = NULL;
+	struct obs_module_metadata *md = NULL;
 
 	// Check if the metadata file exists
-	mod->data_path;
-	struct dstr path = { 0 };
+	struct dstr path = {0};
 
 	dstr_copy(&path, mod->data_path);
 	if (!dstr_is_empty(&path) && dstr_end(&path) != '/')
@@ -113,8 +112,8 @@ int obs_module_load_metadata(struct obs_module* mod)
 		//obs_data_t* metadata = obs_data_create_from_json_file();
 		// If we find a metadata file, allocate a new metadata;
 		md = bmalloc(sizeof(obs_module_metadata_t));
-		obs_data_t* metadata = obs_data_create_from_json_file(path.array);
-		
+		obs_data_t *metadata = obs_data_create_from_json_file(path.array);
+
 		md->display_name = bstrdup(obs_data_get_string(metadata, "display_name"));
 		md->id = bstrdup(obs_data_get_string(metadata, "id"));
 		md->version = bstrdup(obs_data_get_string(metadata, "version"));
@@ -123,7 +122,7 @@ int obs_module_load_metadata(struct obs_module* mod)
 		md->description = bstrdup(obs_data_get_string(metadata, "description"));
 		md->long_description = bstrdup(obs_data_get_string(metadata, "long_description"));
 
-		obs_data_t* urls = obs_data_get_obj(metadata, "urls");
+		obs_data_t *urls = obs_data_get_obj(metadata, "urls");
 		md->repository_url = bstrdup(obs_data_get_string(urls, "repository"));
 		md->website_url = bstrdup(obs_data_get_string(urls, "website"));
 		md->support_url = bstrdup(obs_data_get_string(urls, "support"));
@@ -261,12 +260,12 @@ const char *obs_get_module_data_path(obs_module_t *module)
 	return module ? module->data_path : NULL;
 }
 
-const char* obs_get_module_id(obs_module_t* module)
+const char *obs_get_module_id(obs_module_t *module)
 {
 	return module && module->metadata ? module->metadata->id : NULL;
 }
 
-const char* obs_get_module_version(obs_module_t* module)
+const char *obs_get_module_version(obs_module_t *module)
 {
 	return module && module->metadata ? module->metadata->version : NULL;
 }
@@ -345,21 +344,21 @@ void obs_add_safe_module(const char *name)
 	da_push_back(obs->safe_modules, &item);
 }
 
-void obs_add_core_module(const char* name)
+void obs_add_core_module(const char *name)
 {
 	if (!obs || !name)
 		return;
 
-	char* item = bstrdup(name);
+	char *item = bstrdup(name);
 	da_push_back(obs->core_modules, &item);
 }
 
-void obs_add_disabled_module(const char* name)
+void obs_add_disabled_module(const char *name)
 {
 	if (!obs || !name)
 		return;
 
-	char* item = bstrdup(name);
+	char *item = bstrdup(name);
 	da_push_back(obs->disabled_modules, &item);
 }
 
@@ -383,7 +382,7 @@ static bool is_safe_module(const char *name)
 	return false;
 }
 
-static bool is_core_module(const char* name)
+static bool is_core_module(const char *name)
 {
 	for (size_t i = 0; i < obs->core_modules.num; i++) {
 		if (strcmp(name, obs->core_modules.array[i]) == 0)
@@ -393,7 +392,7 @@ static bool is_core_module(const char* name)
 	return false;
 }
 
-static bool is_disabled_module(const char* name)
+static bool is_disabled_module(const char *name)
 {
 	if (obs->disabled_modules.num == 0)
 		return false;
@@ -406,8 +405,7 @@ static bool is_disabled_module(const char* name)
 	return false;
 }
 
-
-bool obs_get_module_allow_disable(const char* name)
+bool obs_get_module_allow_disable(const char *name)
 {
 	// TODO: Actually write the function with
 	//       some true logic to determine if a module
@@ -733,22 +731,22 @@ void free_module(struct obs_module *mod)
 	bfree(mod->data_path);
 
 	// iterate over mod->sources, free strings, then free mod->sources
-	for (int i = 0; i < mod->sources.num; i++) {
+	for (size_t i = 0; i < mod->sources.num; i++) {
 		bfree(mod->sources.array[i]);
 	}
 	da_free(mod->sources);
 
-	for (int i = 0; i < mod->outputs.num; i++) {
+	for (size_t i = 0; i < mod->outputs.num; i++) {
 		bfree(mod->outputs.array[i]);
 	}
 	da_free(mod->outputs);
 
-	for (int i = 0; i < mod->encoders.num; i++) {
+	for (size_t i = 0; i < mod->encoders.num; i++) {
 		bfree(mod->encoders.array[i]);
 	}
 	da_free(mod->encoders);
 
-	for (int i = 0; i < mod->services.num; i++) {
+	for (size_t i = 0; i < mod->services.num; i++) {
 		bfree(mod->services.array[i]);
 	}
 	da_free(mod->services);
@@ -897,10 +895,9 @@ void obs_register_source_s(const struct obs_source_info *info, size_t size)
 	}
 
 	/* NOTE: The assignment of data.module must occur before memcpy! */
-	const char* modName = loadingModule != NULL ? loadingModule->file : "";
 	if (loadingModule) {
 		data.module = loadingModule;
-		char* source_id = bstrdup(info->id);
+		char *source_id = bstrdup(info->id);
 		da_push_back(loadingModule->sources, &source_id);
 	}
 
@@ -1076,9 +1073,8 @@ void obs_register_encoder_s(const struct obs_encoder_info *info, size_t size)
 
 	REGISTER_OBS_DEF(size, obs_encoder_info, obs->encoder_types, info);
 
-	const char* modName = loadingModule != NULL ? loadingModule->file : "";
 	if (loadingModule) {
-		char* encoder_id = bstrdup(info->id);
+		char *encoder_id = bstrdup(info->id);
 		da_push_back(loadingModule->encoders, &encoder_id);
 	}
 
@@ -1106,9 +1102,8 @@ void obs_register_service_s(const struct obs_service_info *info, size_t size)
 
 	REGISTER_OBS_DEF(size, obs_service_info, obs->service_types, info);
 
-	const char* modName = loadingModule != NULL ? loadingModule->file : "";
 	if (loadingModule) {
-		char* service_id = bstrdup(info->id);
+		char *service_id = bstrdup(info->id);
 		da_push_back(loadingModule->services, &service_id);
 	}
 

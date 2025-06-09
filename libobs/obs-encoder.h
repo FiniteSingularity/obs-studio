@@ -346,7 +346,7 @@ struct obs_encoder_info {
 				uint64_t *next_key, struct encoder_packet *packet, bool *received_packet);
 
 	/** Pointer to module that generated this source **/
-	obs_module_t* module;
+	obs_module_t *module;
 };
 
 EXPORT void obs_register_encoder_s(const struct obs_encoder_info *info, size_t size);
