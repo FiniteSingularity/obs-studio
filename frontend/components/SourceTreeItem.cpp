@@ -91,7 +91,7 @@ SourceTreeItem::SourceTreeItem(SourceTree *tree_, OBSSceneItem sceneitem_) : tre
 	//               The following code is just a simple call to
 	//               turn the disabled source red in the source
 	//               list.
-	if (main->GetPluginManager()->PMSourceDisabled(source)) {
+	if (App()->PluginManagerSourceDisabled(source)) {
 		label->setStyleSheet("QLabel {color: #FF0000;}");
 	}
 

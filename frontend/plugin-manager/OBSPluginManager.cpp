@@ -1,6 +1,7 @@
 #include "OBSPluginManager.hpp"
 
 #include <OBSApp.hpp>
+#include <widgets/OBSBasic.hpp>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QCheckBox>
@@ -55,7 +56,22 @@ constexpr std::string_view OBSPluginManagerModulesFile = "modules.json";
 
 extern bool restart;
 
-std::string OBSPluginManagerController::PMModulesPath()
+void OBSPluginManagerController::PreLoad()
+{
+	LoadModules();
+	DisableModules();
+}
+
+void OBSPluginManagerController::PostLoad()
+{
+	// Find any new modules and add to Plugin Manager.
+	obs_enum_modules(OBSPluginManagerController::AddNewModule, this);
+	// Get list of valid module types.
+	AddModuleTypes();
+	SaveModules();
+}
+
+std::string OBSPluginManagerController::ModulesPath()
 {
 	std::string modulesFile;
 	modulesFile.reserve(App()->userPluginManagerLocation.u8string().size() + OBSPluginManagerPath.size() +
@@ -67,41 +83,41 @@ std::string OBSPluginManagerController::PMModulesPath()
 	return modulesFile;
 }
 
-void OBSPluginManagerController::PMLoadModules()
+void OBSPluginManagerController::LoadModules()
 {
 	// TODO: Make this function safe for corrupt files.
-	auto modulesFile = PMModulesPath();
+	auto modulesFile = ModulesPath();
 	if (std::filesystem::exists(modulesFile)) {
 		std::ifstream jsonFile(modulesFile);
 		nlohmann::json data = nlohmann::json::parse(jsonFile);
-		pmModules.clear();
+		modules.clear();
 		for (auto it : data) {
-			pmModules.push_back({it["display_name"],
-					     it["module_name"],
-					     it["id"],
-					     it["version"],
-					     it["enabled"],
-					     it["enabled"],
-					     it["sources"],
-					     it["outputs"],
-					     it["encoders"],
-					     it["services"],
-					     {},
-					     {},
-					     {},
-					     {}});
+			modules.push_back({it["display_name"],
+					   it["module_name"],
+					   it["id"],
+					   it["version"],
+					   it["enabled"],
+					   it["enabled"],
+					   it["sources"],
+					   it["outputs"],
+					   it["encoders"],
+					   it["services"],
+					   {},
+					   {},
+					   {},
+					   {}});
 		}
 	}
 }
 
-void OBSPluginManagerController::PMSaveModules()
+void OBSPluginManagerController::SaveModules()
 {
 	// TODO: Make this function safe
-	auto modulesFile = PMModulesPath();
+	auto modulesFile = ModulesPath();
 	std::ofstream outFile(modulesFile);
 	nlohmann::json data = nlohmann::json::array();
 
-	for (auto const &module : pmModules) {
+	for (auto const &module : modules) {
 		nlohmann::json modData;
 		modData["display_name"] = module.display_name;
 		modData["module_name"] = module.module_name;
@@ -117,7 +133,7 @@ void OBSPluginManagerController::PMSaveModules()
 	outFile << std::setw(4) << data << std::endl;
 }
 
-void OBSPluginManagerController::PMAddNewModule(void *param, obs_module_t *newModule)
+void OBSPluginManagerController::AddNewModule(void *param, obs_module_t *newModule)
 {
 	auto instance = static_cast<OBSPluginManagerController *>(param);
 	std::string moduleName = obs_get_module_file_name(newModule);
@@ -131,12 +147,12 @@ void OBSPluginManagerController::PMAddNewModule(void *param, obs_module_t *newMo
 	const char *id = obs_get_module_id(newModule);
 	const char *version = obs_get_module_version(newModule);
 
-	auto it = std::find_if(instance->pmModules.begin(), instance->pmModules.end(),
+	auto it = std::find_if(instance->modules.begin(), instance->modules.end(),
 			       [&](OBSModuleInfo module) { return module.module_name == moduleName; });
 
-	if (it == instance->pmModules.end()) {
-		instance->pmModules.push_back({display_name ? display_name : "", module_name, id ? id : "",
-					       version ? version : "", true, true});
+	if (it == instance->modules.end()) {
+		instance->modules.push_back({display_name ? display_name : "", module_name, id ? id : "",
+					     version ? version : "", true, true});
 	} else {
 		it->display_name = display_name ? display_name : "";
 		it->module_name = module_name;
@@ -145,7 +161,7 @@ void OBSPluginManagerController::PMAddNewModule(void *param, obs_module_t *newMo
 	}
 }
 
-void OBSPluginManagerController::PMAddModuleTypes()
+void OBSPluginManagerController::AddModuleTypes()
 {
 	// TODO: Simplify this.
 	const char *source_id;
@@ -158,9 +174,9 @@ void OBSPluginManagerController::PMAddModuleTypes()
 		}
 		std::string moduleName = obs_get_module_file_name(module);
 		moduleName = moduleName.substr(0, moduleName.rfind("."));
-		auto it = std::find_if(pmModules.begin(), pmModules.end(),
+		auto it = std::find_if(modules.begin(), modules.end(),
 				       [moduleName](OBSModuleInfo const &m) { return m.module_name == moduleName; });
-		if (it != pmModules.end()) {
+		if (it != modules.end()) {
 			it->sourcesLoaded.push_back(source_id);
 		}
 	}
@@ -175,9 +191,9 @@ void OBSPluginManagerController::PMAddModuleTypes()
 		}
 		std::string moduleName = obs_get_module_file_name(module);
 		moduleName = moduleName.substr(0, moduleName.rfind("."));
-		auto it = std::find_if(pmModules.begin(), pmModules.end(),
+		auto it = std::find_if(modules.begin(), modules.end(),
 				       [moduleName](OBSModuleInfo const &m) { return m.module_name == moduleName; });
-		if (it != pmModules.end()) {
+		if (it != modules.end()) {
 			it->outputsLoaded.push_back(output_id);
 		}
 	}
@@ -192,9 +208,9 @@ void OBSPluginManagerController::PMAddModuleTypes()
 		}
 		std::string moduleName = obs_get_module_file_name(module);
 		moduleName = moduleName.substr(0, moduleName.rfind("."));
-		auto it = std::find_if(pmModules.begin(), pmModules.end(),
+		auto it = std::find_if(modules.begin(), modules.end(),
 				       [moduleName](OBSModuleInfo const &m) { return m.module_name == moduleName; });
-		if (it != pmModules.end()) {
+		if (it != modules.end()) {
 			it->encodersLoaded.push_back(encoder_id);
 		}
 	}
@@ -209,14 +225,14 @@ void OBSPluginManagerController::PMAddModuleTypes()
 		}
 		std::string moduleName = obs_get_module_file_name(module);
 		moduleName = moduleName.substr(0, moduleName.rfind("."));
-		auto it = std::find_if(pmModules.begin(), pmModules.end(),
+		auto it = std::find_if(modules.begin(), modules.end(),
 				       [moduleName](OBSModuleInfo const &m) { return m.module_name == moduleName; });
-		if (it != pmModules.end()) {
+		if (it != modules.end()) {
 			it->servicesLoaded.push_back(service_id);
 		}
 	}
 
-	for (auto &pmm : pmModules) {
+	for (auto &pmm : modules) {
 		if (pmm.enabledAtLaunch) {
 			pmm.sources = pmm.sourcesLoaded;
 			pmm.encoders = pmm.encodersLoaded;
@@ -224,67 +240,67 @@ void OBSPluginManagerController::PMAddModuleTypes()
 			pmm.services = pmm.servicesLoaded;
 		} else {
 			for (auto const &source : pmm.sources) {
-				pmDisabledSources.push_back(source);
+				disabledSources.push_back(source);
 			}
 			for (auto const &output : pmm.outputs) {
-				pmDisabledOutputs.push_back(output);
+				disabledOutputs.push_back(output);
 			}
 			for (auto const &encoder : pmm.encoders) {
-				pmDisabledEncoders.push_back(encoder);
+				disabledEncoders.push_back(encoder);
 			}
 			for (auto const &service : pmm.services) {
-				pmDisabledServices.push_back(service);
+				disabledServices.push_back(service);
 			}
 		}
 	}
 }
 
-void OBSPluginManagerController::PMDisableModules()
+void OBSPluginManagerController::DisableModules()
 {
-	for (const auto &module : pmModules) {
+	for (const auto &module : modules) {
 		if (!module.enabled) {
 			obs_add_disabled_module(module.module_name.c_str());
 		}
 	}
 }
 
-bool OBSPluginManagerController::PMSourceDisabled(obs_source_t *source) const
+bool OBSPluginManagerController::SourceDisabled(obs_source_t *source) const
 {
 	std::string sourceId = obs_source_get_id(source);
-	return std::find(pmDisabledSources.begin(), pmDisabledSources.end(), sourceId) != pmDisabledSources.end();
+	return std::find(disabledSources.begin(), disabledSources.end(), sourceId) != disabledSources.end();
 }
 
-bool OBSPluginManagerController::PMOutputDisabled(obs_output_t *output) const
+bool OBSPluginManagerController::OutputDisabled(obs_output_t *output) const
 {
 	std::string outputId = obs_output_get_id(output);
-	return std::find(pmDisabledOutputs.begin(), pmDisabledOutputs.end(), outputId) != pmDisabledOutputs.end();
+	return std::find(disabledOutputs.begin(), disabledOutputs.end(), outputId) != disabledOutputs.end();
 }
 
-bool OBSPluginManagerController::PMEncoderDisabled(obs_encoder_t *encoder) const
+bool OBSPluginManagerController::EncoderDisabled(obs_encoder_t *encoder) const
 {
 	std::string encoderId = obs_encoder_get_id(encoder);
-	return std::find(pmDisabledEncoders.begin(), pmDisabledEncoders.end(), encoderId) != pmDisabledEncoders.end();
+	return std::find(disabledEncoders.begin(), disabledEncoders.end(), encoderId) != disabledEncoders.end();
 }
 
-bool OBSPluginManagerController::PMServiceDisabled(obs_service_t *service) const
+bool OBSPluginManagerController::ServiceDisabled(obs_service_t *service) const
 {
 	std::string serviceId = obs_service_get_id(service);
-	return std::find(pmDisabledServices.begin(), pmDisabledServices.end(), serviceId) != pmDisabledServices.end();
+	return std::find(disabledServices.begin(), disabledServices.end(), serviceId) != disabledServices.end();
 }
 
-void OBSPluginManagerController::OpenPMDialog()
+void OBSPluginManagerController::OpenDialog()
 {
 	blog(LOG_INFO, "Plugin Manager Clicked!");
 	auto main = OBSBasic::Get();
-	OBSPluginManager pm(pmModules, main);
+	OBSPluginManager pm(modules, main);
 	auto res = pm.exec();
 	if (res == QDialog::Accepted) {
-		pmModules = pm.result();
-		PMSaveModules();
+		modules = pm.result();
+		SaveModules();
 
 		bool changed = false;
 
-		for (auto const &module : pmModules) {
+		for (auto const &module : modules) {
 			if (module.enabled != module.enabledAtLaunch) {
 				changed = true;
 				break;

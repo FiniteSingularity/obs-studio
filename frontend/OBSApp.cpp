@@ -815,6 +815,7 @@ OBSApp::OBSApp(int &argc, char **argv, profiler_name_store_t *store)
 #endif
 
 	setDesktopFileName("com.obsproject.Studio");
+	pluginManager = new OBSPluginManagerController;
 }
 
 OBSApp::~OBSApp()
@@ -1628,3 +1629,32 @@ void OBSApp::commitData(QSessionManager &manager)
 	}
 }
 #endif
+
+void OBSApp::PluginManagerPreLoad()
+{
+	if (pluginManager != nullptr) {
+		pluginManager->PreLoad();
+	}
+}
+
+void OBSApp::PluginManagerPostLoad()
+{
+	if (pluginManager != nullptr) {
+		pluginManager->PostLoad();
+	}
+}
+
+void OBSApp::PluginManagerOpenDialog()
+{
+	if (pluginManager != nullptr) {
+		pluginManager->OpenDialog();
+	}
+}
+
+bool OBSApp::PluginManagerSourceDisabled(obs_source_t *source)
+{
+	if (pluginManager != nullptr) {
+		return pluginManager->SourceDisabled(source);
+	}
+	return false;
+}

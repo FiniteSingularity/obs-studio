@@ -991,10 +991,7 @@ void OBSBasic::OBSInit()
      */
 	RefreshSceneCollections(true);
 
-	pmController = new OBSPluginManagerController;
-
-	pmController->PMLoadModules();
-	pmController->PMDisableModules();
+	App()->PluginManagerPreLoad();
 
 	blog(LOG_INFO, "---------------------------------");
 	obs_load_all_modules2(&mfi);
@@ -1003,11 +1000,7 @@ void OBSBasic::OBSInit()
 	blog(LOG_INFO, "---------------------------------");
 	obs_post_load_modules();
 
-	// Find any new modules and add to Plugin Manager.
-	obs_enum_modules(OBSPluginManagerController::PMAddNewModule, pmController);
-	// Get list of valid module types.
-	pmController->PMAddModuleTypes();
-	pmController->PMSaveModules();
+	App()->PluginManagerPostLoad();
 
 	BPtr<char *> failed_modules = mfi.failed_modules;
 
@@ -1382,7 +1375,6 @@ OBSBasic::~OBSBasic()
 	delete trayMenu;
 	delete programOptions;
 	delete program;
-	delete pmController;
 
 	/* XXX: any obs data must be released before calling obs_shutdown.
 	 * currently, we can't automate this with C++ RAII because of the
@@ -2057,5 +2049,5 @@ OBSPromptResult OBSBasic::PromptForName(const OBSPromptRequest &request, const O
 
 void OBSBasic::on_actionOpenPluginManager_triggered()
 {
-	pmController->OpenPMDialog();
+	App()->PluginManagerOpenDialog();
 }

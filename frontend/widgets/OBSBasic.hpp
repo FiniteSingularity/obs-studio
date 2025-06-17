@@ -56,7 +56,6 @@ class OBSBasicTransform;
 class OBSLogViewer;
 class OBSMissingFiles;
 class OBSProjector;
-class OBSPluginManagerController;
 class VolControl;
 #ifdef YOUTUBE_ENABLED
 class YouTubeAppDock;
@@ -225,7 +224,6 @@ class OBSBasic : public OBSMainWindow {
 	friend class OBSBasicStatusBar;
 	friend class OBSBasicSourceSelect;
 	friend class OBSBasicSettings;
-	friend class OBSPluginManagerController;
 	friend class Auth;
 	friend class AutoConfig;
 	friend class AutoConfigStreamPage;
@@ -764,15 +762,6 @@ public:
 private slots:
 	void ResizeOutputSizeOfSource();
 
-	/* -------------------------------------
-	 * MARK: - OBSBasic_PluginManager
-	 * -------------------------------------
-	 * */
-private:
-	OBSPluginManagerController *pmController;
-
-public:
-	inline OBSPluginManagerController *GetPluginManager() { return pmController; }
 private slots:
 	void on_actionOpenPluginManager_triggered();
 

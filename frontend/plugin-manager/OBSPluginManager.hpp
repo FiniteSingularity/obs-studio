@@ -5,10 +5,6 @@
 #include <QWidget>
 #include <obs-module.h>
 
-#include "../widgets/OBSBasic.hpp"
-
-class OBSBasic;
-
 struct OBSModuleInfo {
 	std::string display_name;
 	std::string module_name;
@@ -40,23 +36,24 @@ private:
 
 class OBSPluginManagerController {
 private:
-	std::vector<OBSModuleInfo> pmModules = {};
-	std::vector<std::string> pmDisabledSources = {};
-	std::vector<std::string> pmDisabledOutputs = {};
-	std::vector<std::string> pmDisabledServices = {};
-	std::vector<std::string> pmDisabledEncoders = {};
-	std::string PMModulesPath();
-	void PMLoadModules();
-	void PMSaveModules();
-	void PMDisableModules();
-	void PMAddModuleTypes();
-	static void PMAddNewModule(void *param, obs_module_t *newModule);
+	std::vector<OBSModuleInfo> modules = {};
+	std::vector<std::string> disabledSources = {};
+	std::vector<std::string> disabledOutputs = {};
+	std::vector<std::string> disabledServices = {};
+	std::vector<std::string> disabledEncoders = {};
+	std::string ModulesPath();
+	void LoadModules();
+	void SaveModules();
+	void DisableModules();
+	void AddModuleTypes();
+	static void AddNewModule(void *param, obs_module_t *newModule);
 
 public:
-	bool PMSourceDisabled(obs_source_t *source) const;
-	bool PMOutputDisabled(obs_output_t *output) const;
-	bool PMEncoderDisabled(obs_encoder_t *encoder) const;
-	bool PMServiceDisabled(obs_service_t *service) const;
-	friend OBSBasic;
-	void OpenPMDialog();
+	void PreLoad();
+	void PostLoad();
+	bool SourceDisabled(obs_source_t *source) const;
+	bool OutputDisabled(obs_output_t *output) const;
+	bool EncoderDisabled(obs_encoder_t *encoder) const;
+	bool ServiceDisabled(obs_service_t *service) const;
+	void OpenDialog();
 };
