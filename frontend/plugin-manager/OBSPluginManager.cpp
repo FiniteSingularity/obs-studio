@@ -51,7 +51,7 @@ OBSPluginManager::OBSPluginManager(std::vector<OBSModuleInfo> const &modules, QW
 	connect(ui->buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
 }
 
-constexpr std::string_view OBSPluginManagerPath = "/obs-studio/basic/plugin-manager/";
+constexpr std::string_view OBSPluginManagerPath = "/obs-studio/plugin_manager/";
 constexpr std::string_view OBSPluginManagerModulesFile = "modules.json";
 
 extern bool restart;
