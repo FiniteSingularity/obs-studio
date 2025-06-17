@@ -355,7 +355,7 @@ static bool MakeUserDirs()
 
 constexpr std::string_view OBSProfileSubDirectory = "obs-studio/basic/profiles";
 constexpr std::string_view OBSScenesSubDirectory = "obs-studio/basic/scenes";
-constexpr std::string_view OBSPluginManagerSubDirectory = "obs-studio/basic/plugin-manager";
+constexpr std::string_view OBSPluginManagerSubDirectory = "obs-studio/plugin-manager";
 
 static bool MakeUserProfileDirs()
 {

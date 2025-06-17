@@ -20,21 +20,21 @@
 #include "moc_OBSPluginManager.cpp"
 OBSPluginManager::OBSPluginManager(std::vector<OBSModuleInfo> const &modules, QWidget *parent)
 	: QDialog(parent),
-	  _modules(modules),
+	  modules_(modules),
 	  ui(new Ui::OBSPluginManager)
 {
 	setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
 
 	ui->setupUi(this);
 
-	std::sort(_modules.begin(), _modules.end(), [](const OBSModuleInfo &a, const OBSModuleInfo &b) {
-		auto aName = a.display_name != "" ? a.display_name : a.module_name;
-		auto bName = b.display_name != "" ? b.display_name : b.module_name;
+	std::sort(modules_.begin(), modules_.end(), [](const OBSModuleInfo &a, const OBSModuleInfo &b) {
+		auto aName = !a.display_name.empty() ? a.display_name : a.module_name;
+		auto bName = !b.display_name.empty() ? b.display_name : b.module_name;
 		return aName < bName;
 	});
 
-	for (auto &metadata : _modules) {
-		std::string name = metadata.display_name != "" ? metadata.display_name : metadata.module_name;
+	for (auto &metadata : modules_) {
+		std::string name = !metadata.display_name.empty() ? metadata.display_name : metadata.module_name;
 		auto item = new QListWidgetItem(name.c_str());
 		item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
 		item->setCheckState(metadata.enabled ? Qt::Checked : Qt::Unchecked);
@@ -44,7 +44,7 @@ OBSPluginManager::OBSPluginManager(std::vector<OBSModuleInfo> const &modules, QW
 	connect(ui->modulesList, &QListWidget::itemChanged, this, [this](QListWidgetItem *item) {
 		auto row = ui->modulesList->row(item);
 		bool checked = item->checkState() == Qt::Checked;
-		_modules[row].enabled = checked;
+		modules_[row].enabled = checked;
 	});
 
 	connect(ui->buttonBox, &QDialogButtonBox::accepted, this, &QDialog::accept);

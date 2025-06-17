@@ -28,10 +28,10 @@ class OBSPluginManager : public QDialog {
 
 public:
 	explicit OBSPluginManager(std::vector<OBSModuleInfo> const &modules, QWidget *parent = nullptr);
-	inline std::vector<OBSModuleInfo> const result() { return _modules; }
+	inline std::vector<OBSModuleInfo> const result() { return modules_; }
 
 private:
-	std::vector<OBSModuleInfo> _modules;
+	std::vector<OBSModuleInfo> modules_;
 };
 
 class OBSPluginManagerController {
