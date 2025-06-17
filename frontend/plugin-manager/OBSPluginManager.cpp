@@ -1,13 +1,10 @@
 #include "OBSPluginManager.hpp"
+#include "OBSPluginManagerWindow.hpp"
 
 #include <OBSApp.hpp>
 #include <widgets/OBSBasic.hpp>
-#include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QCheckBox>
-#include <QScrollArea>
-#include <QDialogButtonBox>
-#include <QLabel>
+#include <qt-wrappers.hpp>
+
 #include <QMessageBox>
 
 #include <nlohmann/json.hpp>
@@ -15,63 +12,27 @@
 #include <filesystem>
 #include <algorithm>
 
-#include <qt-wrappers.hpp>
-
-#include "moc_OBSPluginManager.cpp"
-OBSPluginManager::OBSPluginManager(std::vector<OBSModuleInfo> const &modules, QWidget *parent)
-	: QDialog(parent),
-	  modules_(modules),
-	  ui(new Ui::OBSPluginManager)
-{
-	setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
-
-	ui->setupUi(this);
-
-	std::sort(modules_.begin(), modules_.end(), [](const OBSModuleInfo &a, const OBSModuleInfo &b) {
-		auto aName = !a.display_name.empty() ? a.display_name : a.module_name;
-		auto bName = !b.display_name.empty() ? b.display_name : b.module_name;
-		return aName < bName;
-	});
-
-	for (auto &metadata : modules_) {
-		std::string name = !metadata.display_name.empty() ? metadata.display_name : metadata.module_name;
-		auto item = new QListWidgetItem(name.c_str());
-		item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
-		item->setCheckState(metadata.enabled ? Qt::Checked : Qt::Unchecked);
-		ui->modulesList->addItem(item);
-	}
-
-	connect(ui->modulesList, &QListWidget::itemChanged, this, [this](QListWidgetItem *item) {
-		auto row = ui->modulesList->row(item);
-		bool checked = item->checkState() == Qt::Checked;
-		modules_[row].enabled = checked;
-	});
-
-	connect(ui->buttonBox, &QDialogButtonBox::accepted, this, &QDialog::accept);
-	connect(ui->buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
-}
-
 constexpr std::string_view OBSPluginManagerPath = "/obs-studio/plugin_manager/";
 constexpr std::string_view OBSPluginManagerModulesFile = "modules.json";
 
 extern bool restart;
 
-void OBSPluginManagerController::PreLoad()
+void OBSPluginManager::PreLoad()
 {
 	LoadModules();
 	DisableModules();
 }
 
-void OBSPluginManagerController::PostLoad()
+void OBSPluginManager::PostLoad()
 {
 	// Find any new modules and add to Plugin Manager.
-	obs_enum_modules(OBSPluginManagerController::AddNewModule, this);
+	obs_enum_modules(OBSPluginManager::AddNewModule, this);
 	// Get list of valid module types.
 	AddModuleTypes();
 	SaveModules();
 }
 
-std::string OBSPluginManagerController::ModulesPath()
+std::string OBSPluginManager::ModulesPath()
 {
 	std::string modulesFile;
 	modulesFile.reserve(App()->userPluginManagerLocation.u8string().size() + OBSPluginManagerPath.size() +
@@ -83,7 +44,7 @@ std::string OBSPluginManagerController::ModulesPath()
 	return modulesFile;
 }
 
-void OBSPluginManagerController::LoadModules()
+void OBSPluginManager::LoadModules()
 {
 	// TODO: Make this function safe for corrupt files.
 	auto modulesFile = ModulesPath();
@@ -110,7 +71,7 @@ void OBSPluginManagerController::LoadModules()
 	}
 }
 
-void OBSPluginManagerController::SaveModules()
+void OBSPluginManager::SaveModules()
 {
 	// TODO: Make this function safe
 	auto modulesFile = ModulesPath();
@@ -133,9 +94,9 @@ void OBSPluginManagerController::SaveModules()
 	outFile << std::setw(4) << data << std::endl;
 }
 
-void OBSPluginManagerController::AddNewModule(void *param, obs_module_t *newModule)
+void OBSPluginManager::AddNewModule(void *param, obs_module_t *newModule)
 {
-	auto instance = static_cast<OBSPluginManagerController *>(param);
+	auto instance = static_cast<OBSPluginManager *>(param);
 	std::string moduleName = obs_get_module_file_name(newModule);
 	moduleName = moduleName.substr(0, moduleName.rfind("."));
 
@@ -161,7 +122,7 @@ void OBSPluginManagerController::AddNewModule(void *param, obs_module_t *newModu
 	}
 }
 
-void OBSPluginManagerController::AddModuleTypes()
+void OBSPluginManager::AddModuleTypes()
 {
 	// TODO: Simplify this.
 	const char *source_id;
@@ -255,7 +216,7 @@ void OBSPluginManagerController::AddModuleTypes()
 	}
 }
 
-void OBSPluginManagerController::DisableModules()
+void OBSPluginManager::DisableModules()
 {
 	for (const auto &module : modules) {
 		if (!module.enabled) {
@@ -264,35 +225,35 @@ void OBSPluginManagerController::DisableModules()
 	}
 }
 
-bool OBSPluginManagerController::SourceDisabled(obs_source_t *source) const
+bool OBSPluginManager::SourceDisabled(obs_source_t *source) const
 {
 	std::string sourceId = obs_source_get_id(source);
 	return std::find(disabledSources.begin(), disabledSources.end(), sourceId) != disabledSources.end();
 }
 
-bool OBSPluginManagerController::OutputDisabled(obs_output_t *output) const
+bool OBSPluginManager::OutputDisabled(obs_output_t *output) const
 {
 	std::string outputId = obs_output_get_id(output);
 	return std::find(disabledOutputs.begin(), disabledOutputs.end(), outputId) != disabledOutputs.end();
 }
 
-bool OBSPluginManagerController::EncoderDisabled(obs_encoder_t *encoder) const
+bool OBSPluginManager::EncoderDisabled(obs_encoder_t *encoder) const
 {
 	std::string encoderId = obs_encoder_get_id(encoder);
 	return std::find(disabledEncoders.begin(), disabledEncoders.end(), encoderId) != disabledEncoders.end();
 }
 
-bool OBSPluginManagerController::ServiceDisabled(obs_service_t *service) const
+bool OBSPluginManager::ServiceDisabled(obs_service_t *service) const
 {
 	std::string serviceId = obs_service_get_id(service);
 	return std::find(disabledServices.begin(), disabledServices.end(), serviceId) != disabledServices.end();
 }
 
-void OBSPluginManagerController::OpenDialog()
+void OBSPluginManager::OpenDialog()
 {
 	blog(LOG_INFO, "Plugin Manager Clicked!");
 	auto main = OBSBasic::Get();
-	OBSPluginManager pm(modules, main);
+	OBSPluginManagerWindow pm(modules, main);
 	auto res = pm.exec();
 	if (res == QDialog::Accepted) {
 		modules = pm.result();

@@ -1,8 +1,8 @@
 #pragma once
-#include "ui_OBSPluginManager.h"
 
-#include <QDialog>
-#include <QWidget>
+#include <vector>
+#include <string>
+
 #include <obs-module.h>
 
 struct OBSModuleInfo {
@@ -22,19 +22,7 @@ struct OBSModuleInfo {
 	std::vector<std::string> servicesLoaded;
 };
 
-class OBSPluginManager : public QDialog {
-	Q_OBJECT
-	std::unique_ptr<Ui::OBSPluginManager> ui;
-
-public:
-	explicit OBSPluginManager(std::vector<OBSModuleInfo> const &modules, QWidget *parent = nullptr);
-	inline std::vector<OBSModuleInfo> const result() { return modules_; }
-
-private:
-	std::vector<OBSModuleInfo> modules_;
-};
-
-class OBSPluginManagerController {
+class OBSPluginManager {
 private:
 	std::vector<OBSModuleInfo> modules = {};
 	std::vector<std::string> disabledSources = {};

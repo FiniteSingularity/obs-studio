@@ -74,7 +74,7 @@ private:
 
 	std::deque<obs_frontend_translate_ui_cb> translatorHooks;
 
-	OBSPluginManagerController *pluginManager;
+	OBSPluginManager *pluginManager;
 
 	bool UpdatePre22MultiviewLayout(const char *layout);
 
