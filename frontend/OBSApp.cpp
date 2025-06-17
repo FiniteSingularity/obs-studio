@@ -357,7 +357,7 @@ static bool MakeUserDirs()
 
 constexpr std::string_view OBSProfileSubDirectory = "obs-studio/basic/profiles";
 constexpr std::string_view OBSScenesSubDirectory = "obs-studio/basic/scenes";
-constexpr std::string_view OBSPluginManagerSubDirectory = "obs-studio/basic/plugin-manager";
+constexpr std::string_view OBSPluginManagerSubDirectory = "obs-studio/plugin_manager";
 
 static bool MakeUserProfileDirs()
 {
@@ -817,6 +817,7 @@ OBSApp::OBSApp(int &argc, char **argv, profiler_name_store_t *store)
 #endif
 
 	setDesktopFileName("com.obsproject.Studio");
+	pluginManager = new OBSPluginManager;
 }
 
 OBSApp::~OBSApp()
@@ -1630,3 +1631,32 @@ void OBSApp::commitData(QSessionManager &manager)
 	}
 }
 #endif
+
+void OBSApp::PluginManagerPreLoad()
+{
+	if (pluginManager != nullptr) {
+		pluginManager->PreLoad();
+	}
+}
+
+void OBSApp::PluginManagerPostLoad()
+{
+	if (pluginManager != nullptr) {
+		pluginManager->PostLoad();
+	}
+}
+
+void OBSApp::PluginManagerOpenDialog()
+{
+	if (pluginManager != nullptr) {
+		pluginManager->OpenDialog();
+	}
+}
+
+bool OBSApp::PluginManagerSourceDisabled(obs_source_t *source)
+{
+	if (pluginManager != nullptr) {
+		return pluginManager->SourceDisabled(source);
+	}
+	return false;
+}
