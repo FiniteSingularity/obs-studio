@@ -24,7 +24,6 @@ target_sources(
     widgets/OBSBasic_Icons.cpp
     widgets/OBSBasic_MainControls.cpp
     widgets/OBSBasic_OutputHandler.cpp
-    widgets/OBSBasic_PluginManager.cpp
     widgets/OBSBasic_Preview.cpp
     widgets/OBSBasic_Profiles.cpp
     widgets/OBSBasic_Projectors.cpp

@@ -19,6 +19,7 @@
 
 #include <utility/OBSTheme.hpp>
 #include <widgets/OBSMainWindow.hpp>
+#include <plugin-manager/OBSPluginManager.hpp>
 
 #include <obs-frontend-api.h>
 #include <util/platform.h>
@@ -83,6 +84,8 @@ private:
 	bool enableHotkeysOutOfFocus = true;
 
 	std::deque<obs_frontend_translate_ui_cb> translatorHooks;
+
+	OBSPluginManager *pluginManager;
 
 	bool UpdatePre22MultiviewLayout(const char *layout);
 
@@ -207,6 +210,12 @@ public:
 #ifndef _WIN32
 	static void SigIntSignalHandler(int);
 #endif
+
+	// Plugin Manager Accessors
+	void PluginManagerPreLoad();
+	void PluginManagerPostLoad();
+	void PluginManagerOpenDialog();
+	bool PluginManagerSourceDisabled(obs_source_t *source);
 
 public slots:
 	void Exec(VoidFunc func);

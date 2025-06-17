@@ -136,23 +136,6 @@ struct OBSPromptRequest {
 	bool optionValue;
 };
 
-struct OBSModuleInfo {
-	std::string display_name;
-	std::string module_name;
-	std::string id;
-	std::string version;
-	bool enabled;
-	bool enabledAtLaunch;
-	std::vector<std::string> sources;
-	std::vector<std::string> outputs;
-	std::vector<std::string> encoders;
-	std::vector<std::string> services;
-	std::vector<std::string> sourcesLoaded;
-	std::vector<std::string> outputsLoaded;
-	std::vector<std::string> encodersLoaded;
-	std::vector<std::string> servicesLoaded;
-};
-
 using OBSPromptCallback = std::function<bool(const OBSPromptResult &result)>;
 
 using OBSProfileCache = std::map<std::string, OBSProfile>;
@@ -781,29 +764,6 @@ public:
 
 private slots:
 	void ResizeOutputSizeOfSource();
-
-	/* -------------------------------------
-	 * MARK: - OBSBasic_PluginManager
-	 * -------------------------------------
-	 * */
-private:
-	std::vector<OBSModuleInfo> pmModules = {};
-	std::vector<std::string> pmDisabledSources = {};
-	std::vector<std::string> pmDisabledOutputs = {};
-	std::vector<std::string> pmDisabledServices = {};
-	std::vector<std::string> pmDisabledEncoders = {};
-	std::string PMModulesPath();
-	void PMLoadModules();
-	void PMSaveModules();
-	void PMDisableModules();
-	void PMAddModuleTypes();
-	static void PMAddNewModule(void *param, obs_module_t *newModule);
-
-public:
-	bool PMSourceDisabled(obs_source_t *source) const;
-	bool PMOutputDisabled(obs_output_t *output) const;
-	bool PMEncoderDisabled(obs_encoder_t *encoder) const;
-	bool PMServiceDisabled(obs_service_t *service) const;
 
 private slots:
 	void on_actionOpenPluginManager_triggered();

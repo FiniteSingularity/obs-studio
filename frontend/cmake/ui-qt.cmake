@@ -44,7 +44,7 @@ target_sources(
     forms/OBSExtraBrowsers.ui
     forms/OBSImporter.ui
     forms/OBSMissingFiles.ui
-    forms/OBSPluginManager.ui
+    forms/OBSPluginManagerWindow.ui
     forms/OBSRemux.ui
     forms/StatusBarWidget.ui
     forms/obs.qrc
