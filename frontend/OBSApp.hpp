@@ -19,7 +19,6 @@
 
 #include <utility/OBSTheme.hpp>
 #include <widgets/OBSMainWindow.hpp>
-#include <plugin-manager/PluginManager.hpp>
 
 #include <obs-frontend-api.h>
 #include <util/platform.h>
@@ -41,6 +40,10 @@ Q_DECLARE_METATYPE(VoidFunc)
 
 class QFileSystemWatcher;
 class QSocketNotifier;
+
+namespace OBS {
+	class PluginManager;
+}
 
 struct UpdateBranch {
 	QString name;
@@ -74,7 +77,7 @@ private:
 
 	std::deque<obs_frontend_translate_ui_cb> translatorHooks;
 
-	OBS::PluginManager *pluginManager;
+	std::unique_ptr<OBS::PluginManager> pluginManager_;
 
 	bool UpdatePre22MultiviewLayout(const char *layout);
 

@@ -53,6 +53,8 @@
 
 #include "moc_OBSApp.cpp"
 
+#include <plugin-manager/PluginManager.hpp>
+
 using namespace std;
 
 string currentLogFile;
@@ -817,7 +819,7 @@ OBSApp::OBSApp(int &argc, char **argv, profiler_name_store_t *store)
 #endif
 
 	setDesktopFileName("com.obsproject.Studio");
-	pluginManager = new OBS::PluginManager;
+	pluginManager_ = std::make_unique<OBS::PluginManager>();
 }
 
 OBSApp::~OBSApp()
@@ -1634,29 +1636,29 @@ void OBSApp::commitData(QSessionManager &manager)
 
 void OBSApp::PluginManagerPreLoad()
 {
-	if (pluginManager != nullptr) {
-		pluginManager->PreLoad();
+	if (pluginManager_) {
+		pluginManager_->PreLoad();
 	}
 }
 
 void OBSApp::PluginManagerPostLoad()
 {
-	if (pluginManager != nullptr) {
-		pluginManager->PostLoad();
+	if (pluginManager_) {
+		pluginManager_->PostLoad();
 	}
 }
 
 void OBSApp::PluginManagerOpenDialog()
 {
-	if (pluginManager != nullptr) {
-		pluginManager->OpenDialog();
+	if (pluginManager_) {
+		pluginManager_->OpenDialog();
 	}
 }
 
 bool OBSApp::PluginManagerSourceDisabled(obs_source_t *source)
 {
-	if (pluginManager != nullptr) {
-		return pluginManager->SourceDisabled(source);
+	if (pluginManager_) {
+		return pluginManager_->SourceDisabled(source);
 	}
 	return false;
 }
