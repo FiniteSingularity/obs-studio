@@ -27,7 +27,7 @@ void PluginManager::preLoad()
 void PluginManager::postLoad()
 {
 	// Find any new modules and add to Plugin Manager.
-	obs_enum_modules(PluginManager::addNewModule_, this);
+	obs_enum_modules(PluginManager::addModule_, this);
 	// Get list of valid module types.
 	addModuleTypes_();
 	saveModules_();
@@ -89,7 +89,7 @@ void PluginManager::saveModules_()
 	outFile << std::setw(4) << data << std::endl;
 }
 
-void PluginManager::addNewModule_(void *param, obs_module_t *newModule)
+void PluginManager::addModule_(void *param, obs_module_t *newModule)
 {
 	auto instance = static_cast<PluginManager *>(param);
 	std::string moduleName = obs_get_module_file_name(newModule);
