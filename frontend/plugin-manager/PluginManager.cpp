@@ -220,31 +220,31 @@ void PluginManager::disableModules_()
 	}
 }
 
-bool PluginManager::sourceDisabled(obs_source_t *source) const
+bool PluginManager::isModuleDisabledFor(obs_source_t *source) const
 {
 	std::string sourceId = obs_source_get_id(source);
 	return std::find(disabledSources_.begin(), disabledSources_.end(), sourceId) != disabledSources_.end();
 }
 
-bool PluginManager::outputDisabled(obs_output_t *output) const
+bool PluginManager::isModuleDisabledFor(obs_output_t *output) const
 {
 	std::string outputId = obs_output_get_id(output);
 	return std::find(disabledOutputs_.begin(), disabledOutputs_.end(), outputId) != disabledOutputs_.end();
 }
 
-bool PluginManager::encoderDisabled(obs_encoder_t *encoder) const
+bool PluginManager::isModuleDisabledFor(obs_encoder_t *encoder) const
 {
 	std::string encoderId = obs_encoder_get_id(encoder);
 	return std::find(disabledEncoders_.begin(), disabledEncoders_.end(), encoderId) != disabledEncoders_.end();
 }
 
-bool PluginManager::serviceDisabled(obs_service_t *service) const
+bool PluginManager::isModuleDisabledFor(obs_service_t *service) const
 {
 	std::string serviceId = obs_service_get_id(service);
 	return std::find(disabledServices_.begin(), disabledServices_.end(), serviceId) != disabledServices_.end();
 }
 
-void PluginManager::openDialog()
+void PluginManager::open()
 {
 	auto main = OBSBasic::Get();
 	PluginManagerWindow pluginManagerWindow(modules_, main);
