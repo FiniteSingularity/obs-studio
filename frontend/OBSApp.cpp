@@ -817,7 +817,7 @@ OBSApp::OBSApp(int &argc, char **argv, profiler_name_store_t *store)
 #endif
 
 	setDesktopFileName("com.obsproject.Studio");
-	pluginManager = new OBSPluginManager;
+	pluginManager = new OBS::PluginManager;
 }
 
 OBSApp::~OBSApp()

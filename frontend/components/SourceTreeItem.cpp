@@ -9,7 +9,7 @@
 #include <QLineEdit>
 #include <QPainter>
 
-#include "plugin-manager/OBSPluginManager.hpp"
+#include "plugin-manager/PluginManager.hpp"
 
 #include "moc_SourceTreeItem.cpp"
 

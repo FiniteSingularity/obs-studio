@@ -7,7 +7,7 @@
 #include <QMessageBox>
 
 #include <qt-wrappers.hpp>
-#include <plugin-manager/OBSPluginManager.hpp>
+#include <plugin-manager/PluginManager.hpp>
 
 // MARK: Constant Expressions
 

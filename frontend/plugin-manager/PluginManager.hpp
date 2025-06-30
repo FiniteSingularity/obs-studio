@@ -5,7 +5,9 @@
 
 #include <obs-module.h>
 
-struct OBSModuleInfo {
+namespace OBS {
+
+struct ModuleInfo {
 	std::string display_name;
 	std::string module_name;
 	std::string id;
@@ -22,9 +24,9 @@ struct OBSModuleInfo {
 	std::vector<std::string> servicesLoaded;
 };
 
-class OBSPluginManager {
+class PluginManager {
 private:
-	std::vector<OBSModuleInfo> modules = {};
+	std::vector<ModuleInfo> modules = {};
 	std::vector<std::string> disabledSources = {};
 	std::vector<std::string> disabledOutputs = {};
 	std::vector<std::string> disabledServices = {};
@@ -44,4 +46,6 @@ public:
 	bool EncoderDisabled(obs_encoder_t *encoder) const;
 	bool ServiceDisabled(obs_service_t *service) const;
 	void OpenDialog();
+};
+
 };

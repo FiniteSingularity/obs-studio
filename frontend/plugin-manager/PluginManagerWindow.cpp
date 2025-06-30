@@ -1,4 +1,4 @@
-#include "OBSPluginManagerWindow.hpp"
+#include "PluginManagerWindow.hpp"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -7,18 +7,20 @@
 #include <QDialogButtonBox>
 #include <QLabel>
 
-#include "moc_OBSPluginManagerWindow.cpp"
+#include "moc_PluginManagerWindow.cpp"
 
-OBSPluginManagerWindow::OBSPluginManagerWindow(std::vector<OBSModuleInfo> const &modules, QWidget *parent)
+namespace OBS {
+
+PluginManagerWindow::PluginManagerWindow(std::vector<ModuleInfo> const &modules, QWidget *parent)
 	: QDialog(parent),
 	  modules_(modules),
-	  ui(new Ui::OBSPluginManagerWindow)
+	  ui(new Ui::PluginManagerWindow)
 {
 	setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
 
 	ui->setupUi(this);
 
-	std::sort(modules_.begin(), modules_.end(), [](const OBSModuleInfo &a, const OBSModuleInfo &b) {
+	std::sort(modules_.begin(), modules_.end(), [](const ModuleInfo &a, const ModuleInfo &b) {
 		auto aName = !a.display_name.empty() ? a.display_name : a.module_name;
 		auto bName = !b.display_name.empty() ? b.display_name : b.module_name;
 		return aName < bName;
@@ -41,3 +43,5 @@ OBSPluginManagerWindow::OBSPluginManagerWindow(std::vector<OBSModuleInfo> const 
 	connect(ui->buttonBox, &QDialogButtonBox::accepted, this, &QDialog::accept);
 	connect(ui->buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
 }
+
+}; // namespace OBS

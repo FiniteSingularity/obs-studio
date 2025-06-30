@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>OBSPluginManagerWindow</class>
- <widget class="QDialog" name="OBSPluginManagerWindow">
+ <class>PluginManagerWindow</class>
+ <widget class="QDialog" name="PluginManagerWindow">
   <property name="geometry">
    <rect>
     <x>0</x>

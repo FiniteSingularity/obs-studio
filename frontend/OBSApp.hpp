@@ -19,7 +19,7 @@
 
 #include <utility/OBSTheme.hpp>
 #include <widgets/OBSMainWindow.hpp>
-#include <plugin-manager/OBSPluginManager.hpp>
+#include <plugin-manager/PluginManager.hpp>
 
 #include <obs-frontend-api.h>
 #include <util/platform.h>
@@ -74,7 +74,7 @@ private:
 
 	std::deque<obs_frontend_translate_ui_cb> translatorHooks;
 
-	OBSPluginManager *pluginManager;
+	OBS::PluginManager *pluginManager;
 
 	bool UpdatePre22MultiviewLayout(const char *layout);
 
