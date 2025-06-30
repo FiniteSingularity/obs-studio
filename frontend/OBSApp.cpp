@@ -53,6 +53,8 @@
 
 #include "moc_OBSApp.cpp"
 
+#include <plugin-manager/PluginManager.hpp>
+
 using namespace std;
 
 string currentLogFile;
@@ -257,7 +259,7 @@ bool OBSApp::InitGlobalLocationDefaults()
 	config_set_default_string(appConfig, "Locations", "Configuration", path);
 	config_set_default_string(appConfig, "Locations", "SceneCollections", path);
 	config_set_default_string(appConfig, "Locations", "Profiles", path);
-	config_set_default_string(appConfig, "Locations", "PluginManager", path);
+	config_set_default_string(appConfig, "Locations", "PluginManagerSettings", path);
 
 	return true;
 }
@@ -366,7 +368,7 @@ static bool MakeUserProfileDirs()
 	const std::filesystem::path userScenesPath =
 		App()->userScenesLocation / std::filesystem::u8path(OBSScenesSubDirectory);
 	const std::filesystem::path userPluginManagerPath =
-		App()->userPluginManagerLocation / std::filesystem::u8path(OBSPluginManagerSubDirectory);
+		App()->userPluginManagerSettingsLocation / std::filesystem::u8path(OBSPluginManagerSubDirectory);
 
 	if (!std::filesystem::exists(userProfilePath)) {
 		try {
@@ -471,13 +473,13 @@ bool OBSApp::InitGlobalConfig()
 	std::filesystem::path defaultUserProfilesLocation =
 		std::filesystem::u8path(config_get_default_string(appConfig, "Locations", "Profiles"));
 	std::filesystem::path defaultPluginManagerLocation =
-		std::filesystem::u8path(config_get_default_string(appConfig, "Locations", "PluginManager"));
+		std::filesystem::u8path(config_get_default_string(appConfig, "Locations", "PluginManagerSettings"));
 
 	if (IsPortableMode()) {
 		userConfigLocation = std::move(defaultUserConfigLocation);
 		userScenesLocation = std::move(defaultUserScenesLocation);
 		userProfilesLocation = std::move(defaultUserProfilesLocation);
-		userPluginManagerLocation = std::move(defaultPluginManagerLocation);
+		userPluginManagerSettingsLocation = std::move(defaultPluginManagerLocation);
 	} else {
 		std::filesystem::path currentUserConfigLocation =
 			std::filesystem::u8path(config_get_string(appConfig, "Locations", "Configuration"));
@@ -486,7 +488,7 @@ bool OBSApp::InitGlobalConfig()
 		std::filesystem::path currentUserProfilesLocation =
 			std::filesystem::u8path(config_get_string(appConfig, "Locations", "Profiles"));
 		std::filesystem::path currentUserPluginManagerLocation =
-			std::filesystem::u8path(config_get_string(appConfig, "Locations", "PluginManager"));
+			std::filesystem::u8path(config_get_string(appConfig, "Locations", "PluginManagerSettings"));
 
 		userConfigLocation = (std::filesystem::exists(currentUserConfigLocation))
 					     ? std::move(currentUserConfigLocation)
@@ -497,9 +499,9 @@ bool OBSApp::InitGlobalConfig()
 		userProfilesLocation = (std::filesystem::exists(currentUserProfilesLocation))
 					       ? std::move(currentUserProfilesLocation)
 					       : std::move(defaultUserProfilesLocation);
-		userPluginManagerLocation = (std::filesystem::exists(currentUserPluginManagerLocation))
-						    ? std::move(currentUserPluginManagerLocation)
-						    : std::move(defaultPluginManagerLocation);
+		userPluginManagerSettingsLocation = (std::filesystem::exists(currentUserPluginManagerLocation))
+							    ? std::move(currentUserPluginManagerLocation)
+							    : std::move(defaultPluginManagerLocation);
 	}
 
 	bool userConfigResult = InitUserConfig(userConfigLocation, lastVersion);
@@ -817,7 +819,7 @@ OBSApp::OBSApp(int &argc, char **argv, profiler_name_store_t *store)
 #endif
 
 	setDesktopFileName("com.obsproject.Studio");
-	pluginManager = new OBSPluginManager;
+	pluginManager_ = std::make_unique<OBS::PluginManager>();
 }
 
 OBSApp::~OBSApp()
@@ -1632,31 +1634,24 @@ void OBSApp::commitData(QSessionManager &manager)
 }
 #endif
 
-void OBSApp::PluginManagerPreLoad()
+void OBSApp::loadAppModules(struct obs_module_failure_info &mfi)
 {
-	if (pluginManager != nullptr) {
-		pluginManager->PreLoad();
-	}
+	pluginManager_->preLoad();
+	blog(LOG_INFO, "---------------------------------");
+	obs_load_all_modules2(&mfi);
+	blog(LOG_INFO, "---------------------------------");
+	obs_log_loaded_modules();
+	blog(LOG_INFO, "---------------------------------");
+	obs_post_load_modules();
+	pluginManager_->postLoad();
 }
 
-void OBSApp::PluginManagerPostLoad()
+void OBSApp::pluginManagerOpenDialog()
 {
-	if (pluginManager != nullptr) {
-		pluginManager->PostLoad();
-	}
+	pluginManager_->open();
 }
 
-void OBSApp::PluginManagerOpenDialog()
+bool OBSApp::pluginManagerSourceDisabled(obs_source_t *source)
 {
-	if (pluginManager != nullptr) {
-		pluginManager->OpenDialog();
-	}
-}
-
-bool OBSApp::PluginManagerSourceDisabled(obs_source_t *source)
-{
-	if (pluginManager != nullptr) {
-		return pluginManager->SourceDisabled(source);
-	}
-	return false;
+	return pluginManager_->isModuleDisabledFor(source);
 }

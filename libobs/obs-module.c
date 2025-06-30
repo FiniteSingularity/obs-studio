@@ -407,9 +407,6 @@ static bool is_disabled_module(const char *name)
 
 bool obs_get_module_allow_disable(const char *name)
 {
-	// TODO: Actually write the function with
-	//       some true logic to determine if a module
-	//       can be disabled.
 	return !is_core_module(name);
 }
 

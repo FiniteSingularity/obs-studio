@@ -22,7 +22,7 @@
 #include "ColorSelect.hpp"
 #include "OBSBasicControls.hpp"
 #include "OBSBasicStats.hpp"
-#include "plugin-manager/OBSPluginManager.hpp"
+#include "plugin-manager/PluginManager.hpp"
 #include "VolControl.hpp"
 
 #include <obs-module.h>
@@ -187,9 +187,9 @@ static void SetSafeModuleNames()
 	return;
 #else
 	string module;
-	stringstream modules(SAFE_MODULES);
+	stringstream modules_(SAFE_MODULES);
 
-	while (getline(modules, module, '|')) {
+	while (getline(modules_, module, '|')) {
 		/* When only disallowing third-party plugins, still add
 		 * "unsafe" bundled modules to the safe list. */
 		if (disable_3p_plugins || !unsafe_modules.count(module))
@@ -201,16 +201,16 @@ static void SetSafeModuleNames()
 static void SetCoreModuleNames()
 {
 #ifndef SAFE_MODULES
-	return;
+	throw "SAFE_MODULES not defined";
 #else
+	std::string safeModules = SAFE_MODULES;
+	if (safeModules.empty()) {
+		throw "SAFE_MODULES is empty";
+	}
 	string module;
-	stringstream modules(SAFE_MODULES);
+	stringstream modules_(SAFE_MODULES);
 
-	while (getline(modules, module, '|')) {
-		// TODO: Figure this out.
-		/* Is SAFE_MODULES actually CORE_MODULES in disguise?*/
-		/* Exeldro says "yes!" "it is indeed all modules that are build with obs" */
-		/* Barry however, says "no" */
+	while (getline(modules_, module, '|')) {
 		obs_add_core_module(module.c_str());
 	}
 #endif
@@ -991,16 +991,7 @@ void OBSBasic::OBSInit()
      */
 	RefreshSceneCollections(true);
 
-	App()->PluginManagerPreLoad();
-
-	blog(LOG_INFO, "---------------------------------");
-	obs_load_all_modules2(&mfi);
-	blog(LOG_INFO, "---------------------------------");
-	obs_log_loaded_modules();
-	blog(LOG_INFO, "---------------------------------");
-	obs_post_load_modules();
-
-	App()->PluginManagerPostLoad();
+	App()->loadAppModules(mfi);
 
 	BPtr<char *> failed_modules = mfi.failed_modules;
 
@@ -2049,5 +2040,5 @@ OBSPromptResult OBSBasic::PromptForName(const OBSPromptRequest &request, const O
 
 void OBSBasic::on_actionOpenPluginManager_triggered()
 {
-	App()->PluginManagerOpenDialog();
+	App()->pluginManagerOpenDialog();
 }
