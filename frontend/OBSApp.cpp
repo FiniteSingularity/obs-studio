@@ -500,8 +500,8 @@ bool OBSApp::InitGlobalConfig()
 					       ? std::move(currentUserProfilesLocation)
 					       : std::move(defaultUserProfilesLocation);
 		userPluginManagerSettingsLocation = (std::filesystem::exists(currentUserPluginManagerLocation))
-						    ? std::move(currentUserPluginManagerLocation)
-						    : std::move(defaultPluginManagerLocation);
+							    ? std::move(currentUserPluginManagerLocation)
+							    : std::move(defaultPluginManagerLocation);
 	}
 
 	bool userConfigResult = InitUserConfig(userConfigLocation, lastVersion);

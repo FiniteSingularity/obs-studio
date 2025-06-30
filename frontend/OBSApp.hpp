@@ -42,7 +42,7 @@ class QFileSystemWatcher;
 class QSocketNotifier;
 
 namespace OBS {
-	class PluginManager;
+class PluginManager;
 }
 
 struct UpdateBranch {
@@ -196,7 +196,7 @@ public:
 	static void SigIntSignalHandler(int);
 #endif
 
-	void loadAppModules(struct obs_module_failure_info& mfi);
+	void loadAppModules(struct obs_module_failure_info &mfi);
 
 	// Plugin Manager Accessors
 	void pluginManagerOpenDialog();

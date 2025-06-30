@@ -44,10 +44,10 @@ public:
 	void postLoad();
 	void open();
 
-	bool isModuleDisabledFor(obs_source_t* source) const;
-	bool isModuleDisabledFor(obs_output_t* output) const;
-	bool isModuleDisabledFor(obs_encoder_t* encoder) const;
-	bool isModuleDisabledFor(obs_service_t* service) const;
+	bool isModuleDisabledFor(obs_source_t *source) const;
+	bool isModuleDisabledFor(obs_output_t *output) const;
+	bool isModuleDisabledFor(obs_encoder_t *encoder) const;
+	bool isModuleDisabledFor(obs_service_t *service) const;
 };
 
-};
+}; // namespace OBS
