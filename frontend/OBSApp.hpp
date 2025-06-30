@@ -135,7 +135,7 @@ public:
 	std::filesystem::path userConfigLocation;
 	std::filesystem::path userScenesLocation;
 	std::filesystem::path userProfilesLocation;
-	std::filesystem::path userPluginManagerLocation;
+	std::filesystem::path userPluginManagerSettingsLocation;
 
 	inline const char *GetLocale() const { return locale.c_str(); }
 

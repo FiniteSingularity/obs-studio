@@ -35,7 +35,7 @@ void PluginManager::postLoad()
 
 std::filesystem::path PluginManager::getConfigFilePath_()
 {
-	std::filesystem::path path = App()->userPluginManagerLocation / std::filesystem::u8path(OBSPluginManagerPath) / std::filesystem::u8path(OBSPluginManagerModulesFile);
+	std::filesystem::path path = App()->userPluginManagerSettingsLocation / std::filesystem::u8path(OBSPluginManagerPath) / std::filesystem::u8path(OBSPluginManagerModulesFile);
 	return path;
 }
 
