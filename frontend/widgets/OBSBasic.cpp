@@ -991,16 +991,7 @@ void OBSBasic::OBSInit()
      */
 	RefreshSceneCollections(true);
 
-	App()->pluginManagerPreLoad();
-
-	blog(LOG_INFO, "---------------------------------");
-	obs_load_all_modules2(&mfi);
-	blog(LOG_INFO, "---------------------------------");
-	obs_log_loaded_modules();
-	blog(LOG_INFO, "---------------------------------");
-	obs_post_load_modules();
-
-	App()->pluginManagerPostLoad();
+	App()->loadAppModules(mfi);
 
 	BPtr<char *> failed_modules = mfi.failed_modules;
 

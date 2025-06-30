@@ -196,9 +196,9 @@ public:
 	static void SigIntSignalHandler(int);
 #endif
 
+	void loadAppModules(struct obs_module_failure_info& mfi);
+
 	// Plugin Manager Accessors
-	void pluginManagerPreLoad();
-	void pluginManagerPostLoad();
 	void pluginManagerOpenDialog();
 	bool pluginManagerSourceDisabled(obs_source_t *source);
 
