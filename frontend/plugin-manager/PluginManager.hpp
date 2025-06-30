@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <string>
+#include <filesystem>
 
 #include <obs-module.h>
 
@@ -31,7 +32,7 @@ private:
 	std::vector<std::string> disabledOutputs_ = {};
 	std::vector<std::string> disabledServices_ = {};
 	std::vector<std::string> disabledEncoders_ = {};
-	std::string modulesPath_();
+	std::filesystem::path getConfigFilePath_();
 	void loadModules_();
 	void saveModules_();
 	void disableModules_();

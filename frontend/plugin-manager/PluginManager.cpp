@@ -9,14 +9,13 @@
 
 #include <nlohmann/json.hpp>
 #include <fstream>
-#include <filesystem>
 #include <algorithm>
 
 extern bool restart;
 
 namespace OBS {
 
-constexpr std::string_view OBSPluginManagerPath = "/obs-studio/plugin_manager/";
+constexpr std::string_view OBSPluginManagerPath = "obs-studio/plugin_manager";
 constexpr std::string_view OBSPluginManagerModulesFile = "modules.json";
 
 void PluginManager::preLoad()
@@ -34,22 +33,16 @@ void PluginManager::postLoad()
 	saveModules_();
 }
 
-std::string PluginManager::modulesPath_()
+std::filesystem::path PluginManager::getConfigFilePath_()
 {
-	std::string modulesFile;
-	modulesFile.reserve(App()->userPluginManagerLocation.u8string().size() + OBSPluginManagerPath.size() +
-			    OBSPluginManagerModulesFile.size());
-	modulesFile.append(App()->userPluginManagerLocation.u8string())
-		.append(OBSPluginManagerPath)
-		.append(OBSPluginManagerModulesFile);
-
-	return modulesFile;
+	std::filesystem::path path = App()->userPluginManagerLocation / std::filesystem::u8path(OBSPluginManagerPath) / std::filesystem::u8path(OBSPluginManagerModulesFile);
+	return path;
 }
 
 void PluginManager::loadModules_()
 {
 	// TODO: Make this function safe for corrupt files.
-	auto modulesFile = modulesPath_();
+	auto modulesFile = getConfigFilePath_();
 	if (std::filesystem::exists(modulesFile)) {
 		std::ifstream jsonFile(modulesFile);
 		nlohmann::json data = nlohmann::json::parse(jsonFile);
@@ -76,7 +69,7 @@ void PluginManager::loadModules_()
 void PluginManager::saveModules_()
 {
 	// TODO: Make this function safe
-	auto modulesFile = modulesPath_();
+	auto modulesFile = getConfigFilePath_();
 	std::ofstream outFile(modulesFile);
 	nlohmann::json data = nlohmann::json::array();
 
