@@ -1,8 +1,8 @@
 target_sources(
   obs-studio
   PRIVATE
-    plugin-manager/OBSPluginManager.cpp
-    plugin-manager/OBSPluginManager.hpp
-    plugin-manager/OBSPluginManagerWindow.cpp
-    plugin-manager/OBSPluginManagerWindow.hpp
+    plugin-manager/PluginManager.cpp
+    plugin-manager/PluginManager.hpp
+    plugin-manager/PluginManagerWindow.cpp
+    plugin-manager/PluginManagerWindow.hpp
 )
