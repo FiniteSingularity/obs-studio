@@ -201,16 +201,16 @@ static void SetSafeModuleNames()
 static void SetCoreModuleNames()
 {
 #ifndef SAFE_MODULES
-	return;
+	throw "SAFE_MODULES not defined";
 #else
+	std::string safeModules = SAFE_MODULES;
+	if (safeModules.empty()) {
+		throw "SAFE_MODULES is empty";
+	}
 	string module;
 	stringstream modules_(SAFE_MODULES);
 
 	while (getline(modules_, module, '|')) {
-		// TODO: Figure this out.
-		/* Is SAFE_MODULES actually CORE_MODULES in disguise?*/
-		/* Exeldro says "yes!" "it is indeed all modules that are build with obs" */
-		/* Barry however, says "no" */
 		obs_add_core_module(module.c_str());
 	}
 #endif
