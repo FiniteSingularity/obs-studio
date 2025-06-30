@@ -1646,10 +1646,10 @@ void OBSApp::pluginManagerPostLoad()
 
 void OBSApp::pluginManagerOpenDialog()
 {
-	pluginManager_->openDialog();
+	pluginManager_->open();
 }
 
 bool OBSApp::pluginManagerSourceDisabled(obs_source_t *source)
 {
-	return pluginManager_->sourceDisabled(source);
+	return pluginManager_->isModuleDisabledFor(source);
 }
