@@ -197,10 +197,10 @@ public:
 #endif
 
 	// Plugin Manager Accessors
-	void PluginManagerPreLoad();
-	void PluginManagerPostLoad();
-	void PluginManagerOpenDialog();
-	bool PluginManagerSourceDisabled(obs_source_t *source);
+	void pluginManagerPreLoad();
+	void pluginManagerPostLoad();
+	void pluginManagerOpenDialog();
+	bool pluginManagerSourceDisabled(obs_source_t *source);
 
 public slots:
 	void Exec(VoidFunc func);

@@ -26,26 +26,26 @@ struct ModuleInfo {
 
 class PluginManager {
 private:
-	std::vector<ModuleInfo> modules = {};
-	std::vector<std::string> disabledSources = {};
-	std::vector<std::string> disabledOutputs = {};
-	std::vector<std::string> disabledServices = {};
-	std::vector<std::string> disabledEncoders = {};
-	std::string ModulesPath();
-	void LoadModules();
-	void SaveModules();
-	void DisableModules();
-	void AddModuleTypes();
-	static void AddNewModule(void *param, obs_module_t *newModule);
+	std::vector<ModuleInfo> modules_ = {};
+	std::vector<std::string> disabledSources_ = {};
+	std::vector<std::string> disabledOutputs_ = {};
+	std::vector<std::string> disabledServices_ = {};
+	std::vector<std::string> disabledEncoders_ = {};
+	std::string modulesPath_();
+	void loadModules_();
+	void saveModules_();
+	void disableModules_();
+	void addModuleTypes_();
+	static void addNewModule_(void *param, obs_module_t *newModule);
 
 public:
-	void PreLoad();
-	void PostLoad();
-	bool SourceDisabled(obs_source_t *source) const;
-	bool OutputDisabled(obs_output_t *output) const;
-	bool EncoderDisabled(obs_encoder_t *encoder) const;
-	bool ServiceDisabled(obs_service_t *service) const;
-	void OpenDialog();
+	void preLoad();
+	void postLoad();
+	bool sourceDisabled(obs_source_t *source) const;
+	bool outputDisabled(obs_output_t *output) const;
+	bool encoderDisabled(obs_encoder_t *encoder) const;
+	bool serviceDisabled(obs_service_t *service) const;
+	void openDialog();
 };
 
 };

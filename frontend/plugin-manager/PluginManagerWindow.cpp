@@ -21,8 +21,8 @@ PluginManagerWindow::PluginManagerWindow(std::vector<ModuleInfo> const &modules,
 	ui->setupUi(this);
 
 	std::sort(modules_.begin(), modules_.end(), [](const ModuleInfo &a, const ModuleInfo &b) {
-		auto aName = !a.display_name.empty() ? a.display_name : a.module_name;
-		auto bName = !b.display_name.empty() ? b.display_name : b.module_name;
+		std::string aName = !a.display_name.empty() ? a.display_name : a.module_name;
+		std::string bName = !b.display_name.empty() ? b.display_name : b.module_name;
 		return aName < bName;
 	});
 

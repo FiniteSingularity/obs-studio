@@ -1634,31 +1634,22 @@ void OBSApp::commitData(QSessionManager &manager)
 }
 #endif
 
-void OBSApp::PluginManagerPreLoad()
+void OBSApp::pluginManagerPreLoad()
 {
-	if (pluginManager_) {
-		pluginManager_->PreLoad();
-	}
+	pluginManager_->preLoad();
 }
 
-void OBSApp::PluginManagerPostLoad()
+void OBSApp::pluginManagerPostLoad()
 {
-	if (pluginManager_) {
-		pluginManager_->PostLoad();
-	}
+	pluginManager_->postLoad();
 }
 
-void OBSApp::PluginManagerOpenDialog()
+void OBSApp::pluginManagerOpenDialog()
 {
-	if (pluginManager_) {
-		pluginManager_->OpenDialog();
-	}
+	pluginManager_->openDialog();
 }
 
-bool OBSApp::PluginManagerSourceDisabled(obs_source_t *source)
+bool OBSApp::pluginManagerSourceDisabled(obs_source_t *source)
 {
-	if (pluginManager_) {
-		return pluginManager_->SourceDisabled(source);
-	}
-	return false;
+	return pluginManager_->sourceDisabled(source);
 }

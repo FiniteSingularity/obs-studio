@@ -187,9 +187,9 @@ static void SetSafeModuleNames()
 	return;
 #else
 	string module;
-	stringstream modules(SAFE_MODULES);
+	stringstream modules_(SAFE_MODULES);
 
-	while (getline(modules, module, '|')) {
+	while (getline(modules_, module, '|')) {
 		/* When only disallowing third-party plugins, still add
 		 * "unsafe" bundled modules to the safe list. */
 		if (disable_3p_plugins || !unsafe_modules.count(module))
@@ -204,9 +204,9 @@ static void SetCoreModuleNames()
 	return;
 #else
 	string module;
-	stringstream modules(SAFE_MODULES);
+	stringstream modules_(SAFE_MODULES);
 
-	while (getline(modules, module, '|')) {
+	while (getline(modules_, module, '|')) {
 		// TODO: Figure this out.
 		/* Is SAFE_MODULES actually CORE_MODULES in disguise?*/
 		/* Exeldro says "yes!" "it is indeed all modules that are build with obs" */
@@ -991,7 +991,7 @@ void OBSBasic::OBSInit()
      */
 	RefreshSceneCollections(true);
 
-	App()->PluginManagerPreLoad();
+	App()->pluginManagerPreLoad();
 
 	blog(LOG_INFO, "---------------------------------");
 	obs_load_all_modules2(&mfi);
@@ -1000,7 +1000,7 @@ void OBSBasic::OBSInit()
 	blog(LOG_INFO, "---------------------------------");
 	obs_post_load_modules();
 
-	App()->PluginManagerPostLoad();
+	App()->pluginManagerPostLoad();
 
 	BPtr<char *> failed_modules = mfi.failed_modules;
 
@@ -2049,5 +2049,5 @@ OBSPromptResult OBSBasic::PromptForName(const OBSPromptRequest &request, const O
 
 void OBSBasic::on_actionOpenPluginManager_triggered()
 {
-	App()->PluginManagerOpenDialog();
+	App()->pluginManagerOpenDialog();
 }
