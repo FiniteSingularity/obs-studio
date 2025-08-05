@@ -1879,6 +1879,12 @@ EXPORT void obs_scene_prune_sources(obs_scene_t *scene);
 
 EXPORT const char *obs_output_get_display_name(const char *id);
 
+/** Returns a pointer to the module which provides the output */
+EXPORT obs_module_t *obs_output_get_module(const char *id);
+
+/** Returns the load state of a output's module given the id */
+EXPORT enum obs_module_load_state obs_output_load_state(const char *id);
+
 /**
  * Creates an output.
  *
@@ -2211,6 +2217,12 @@ EXPORT uint64_t obs_output_get_pause_offset(obs_output_t *output);
 
 EXPORT const char *obs_encoder_get_display_name(const char *id);
 
+/** Returns a pointer to the module which provides the encoder */
+EXPORT obs_module_t *obs_encoder_get_module(const char *id);
+
+/** Returns the load state of an encoder's module given the id */
+EXPORT enum obs_module_load_state obs_encoder_load_state(const char *id);
+
 /**
  * Creates a video encoder context
  *
@@ -2456,6 +2468,12 @@ EXPORT void obs_encoder_group_destroy(obs_encoder_group_t *group);
 /* Stream Services */
 
 EXPORT const char *obs_service_get_display_name(const char *id);
+
+/** Returns a pointer to the module which provides the service */
+EXPORT obs_module_t *obs_service_get_module(const char *id);
+
+/** Returns the load state of a service's module given the id */
+EXPORT enum obs_module_load_state obs_service_load_state(const char *id);
 
 EXPORT obs_service_t *obs_service_create(const char *id, const char *name, obs_data_t *settings,
 					 obs_data_t *hotkey_data);

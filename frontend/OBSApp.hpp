@@ -200,7 +200,6 @@ public:
 
 	// Plugin Manager Accessors
 	void pluginManagerOpenDialog();
-	bool pluginManagerSourceDisabled(obs_source_t *source);
 
 public slots:
 	void Exec(VoidFunc func);

@@ -132,7 +132,6 @@ const char *obs_source_get_display_name(const char *id)
 
 obs_module_t *obs_source_get_module(const char *id)
 {
-	// IS THERE A BETTER WAY TO DO THIS?
 	obs_module_t *module = obs->first_module;
 	while (module) {
 		for (size_t i = 0; i < module->sources.num; i++) {

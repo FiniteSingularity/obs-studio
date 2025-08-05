@@ -45,7 +45,6 @@ std::filesystem::path PluginManager::getConfigFilePath_()
 
 void PluginManager::loadModules_()
 {
-	// TODO: Make this function safe for corrupt files.
 	auto modulesFile = getConfigFilePath_();
 	if (std::filesystem::exists(modulesFile)) {
 		std::ifstream jsonFile(modulesFile);
@@ -96,7 +95,6 @@ void PluginManager::linkUnloadedModules_()
 
 void PluginManager::saveModules_()
 {
-	// TODO: Make this function safe
 	auto modulesFile = getConfigFilePath_();
 	std::ofstream outFile(modulesFile);
 	nlohmann::json data = nlohmann::json::array();
@@ -246,30 +244,6 @@ void PluginManager::disableModules_()
 			obs_add_disabled_module(module.module_name.c_str());
 		}
 	}
-}
-
-bool PluginManager::isModuleDisabledFor(obs_source_t *source) const
-{
-	std::string sourceId = obs_source_get_id(source);
-	return std::find(disabledSources_.begin(), disabledSources_.end(), sourceId) != disabledSources_.end();
-}
-
-bool PluginManager::isModuleDisabledFor(obs_output_t *output) const
-{
-	std::string outputId = obs_output_get_id(output);
-	return std::find(disabledOutputs_.begin(), disabledOutputs_.end(), outputId) != disabledOutputs_.end();
-}
-
-bool PluginManager::isModuleDisabledFor(obs_encoder_t *encoder) const
-{
-	std::string encoderId = obs_encoder_get_id(encoder);
-	return std::find(disabledEncoders_.begin(), disabledEncoders_.end(), encoderId) != disabledEncoders_.end();
-}
-
-bool PluginManager::isModuleDisabledFor(obs_service_t *service) const
-{
-	std::string serviceId = obs_service_get_id(service);
-	return std::find(disabledServices_.begin(), disabledServices_.end(), serviceId) != disabledServices_.end();
 }
 
 void PluginManager::open()

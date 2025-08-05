@@ -95,15 +95,15 @@ SourceTreeItem::SourceTreeItem(SourceTree *tree_, OBSSceneItem sceneitem_) : tre
 	//               OBS_MODULE_DISABLED
 	//               OBS_MODULE_DISABLED_SAFE
 	//               OBS_MODULE_ERROR
-
 	const char *sourceId = obs_source_get_unversioned_id(source);
-	enum obs_module_load_state loadState = obs_source_load_state(sourceId);
 	switch (obs_source_load_state(sourceId)) {
 	case OBS_MODULE_DISABLED:
 		label->setStyleSheet("QLabel {color: #FF0000;}");
 		break;
 	case OBS_MODULE_MISSING:
 		label->setStyleSheet("QLabel {color: #FFFF00;}");
+		break;
+	default:
 		break;
 	}
 
