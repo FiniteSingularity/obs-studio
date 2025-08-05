@@ -1401,6 +1401,14 @@ void obs_shutdown(void)
 	}
 	obs->first_module = NULL;
 
+	module = obs->first_disabled_module;
+	while (module) {
+		struct obs_module *next = module->next;
+		free_module(module);
+		module = next;
+	}
+	obs->first_disabled_module = NULL;
+
 	obs_free_data();
 	obs_free_audio();
 	obs_free_video();

@@ -37,6 +37,7 @@ private:
 	void saveModules_();
 	void disableModules_();
 	void addModuleTypes_();
+	void linkUnloadedModules_();
 	static void addModule_(void *param, obs_module_t *newModule);
 
 public:

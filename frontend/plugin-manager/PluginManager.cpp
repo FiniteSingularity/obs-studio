@@ -31,11 +31,15 @@ void PluginManager::postLoad()
 	// Get list of valid module types.
 	addModuleTypes_();
 	saveModules_();
+	// Add provided features from any unloaded modules
+	linkUnloadedModules_();
 }
 
 std::filesystem::path PluginManager::getConfigFilePath_()
 {
-	std::filesystem::path path = App()->userPluginManagerSettingsLocation / std::filesystem::u8path(OBSPluginManagerPath) / std::filesystem::u8path(OBSPluginManagerModulesFile);
+	std::filesystem::path path = App()->userPluginManagerSettingsLocation /
+				     std::filesystem::u8path(OBSPluginManagerPath) /
+				     std::filesystem::u8path(OBSPluginManagerModulesFile);
 	return path;
 }
 
@@ -49,19 +53,43 @@ void PluginManager::loadModules_()
 		modules_.clear();
 		for (auto it : data) {
 			modules_.push_back({it["display_name"],
-					   it["module_name"],
-					   it["id"],
-					   it["version"],
-					   it["enabled"],
-					   it["enabled"],
-					   it["sources"],
-					   it["outputs"],
-					   it["encoders"],
-					   it["services"],
-					   {},
-					   {},
-					   {},
-					   {}});
+					    it["module_name"],
+					    it["id"],
+					    it["version"],
+					    it["enabled"],
+					    it["enabled"],
+					    it["sources"],
+					    it["outputs"],
+					    it["encoders"],
+					    it["services"],
+					    {},
+					    {},
+					    {},
+					    {}});
+		}
+	}
+}
+
+void PluginManager::linkUnloadedModules_()
+{
+	for (const auto &module : modules_) {
+		if (!module.enabled) {
+			auto obsModule = obs_get_disabled_module(module.module_name.c_str());
+			if (!obsModule) {
+				continue;
+			}
+			for (const auto &source : module.sources) {
+				obs_module_add_source(obsModule, source.c_str());
+			}
+			for (const auto &output : module.outputs) {
+				obs_module_add_output(obsModule, output.c_str());
+			}
+			for (const auto &encoder : module.encoders) {
+				obs_module_add_encoder(obsModule, encoder.c_str());
+			}
+			for (const auto &service : module.services) {
+				obs_module_add_service(obsModule, service.c_str());
+			}
 		}
 	}
 }
@@ -108,7 +136,7 @@ void PluginManager::addModule_(void *param, obs_module_t *newModule)
 
 	if (it == instance->modules_.end()) {
 		instance->modules_.push_back({display_name ? display_name : "", module_name, id ? id : "",
-					     version ? version : "", true, true});
+					      version ? version : "", true, true});
 	} else {
 		it->display_name = display_name ? display_name : "";
 		it->module_name = module_name;
