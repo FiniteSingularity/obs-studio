@@ -145,7 +145,6 @@ void PluginManager::addModule_(void *param, obs_module_t *newModule)
 
 void PluginManager::addModuleTypes_()
 {
-	// TODO: Simplify this.
 	const char *source_id;
 	int i = 0;
 	while (obs_enum_source_types(i, &source_id)) {
