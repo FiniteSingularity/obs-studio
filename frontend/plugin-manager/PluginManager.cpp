@@ -31,17 +31,20 @@ void PluginManager::postLoad()
 	// Get list of valid module types.
 	addModuleTypes_();
 	saveModules_();
+	// Add provided features from any unloaded modules
+	linkUnloadedModules_();
 }
 
 std::filesystem::path PluginManager::getConfigFilePath_()
 {
-	std::filesystem::path path = App()->userPluginManagerSettingsLocation / std::filesystem::u8path(OBSPluginManagerPath) / std::filesystem::u8path(OBSPluginManagerModulesFile);
+	std::filesystem::path path = App()->userPluginManagerSettingsLocation /
+				     std::filesystem::u8path(OBSPluginManagerPath) /
+				     std::filesystem::u8path(OBSPluginManagerModulesFile);
 	return path;
 }
 
 void PluginManager::loadModules_()
 {
-	// TODO: Make this function safe for corrupt files.
 	auto modulesFile = getConfigFilePath_();
 	if (std::filesystem::exists(modulesFile)) {
 		std::ifstream jsonFile(modulesFile);
@@ -49,26 +52,49 @@ void PluginManager::loadModules_()
 		modules_.clear();
 		for (auto it : data) {
 			modules_.push_back({it["display_name"],
-					   it["module_name"],
-					   it["id"],
-					   it["version"],
-					   it["enabled"],
-					   it["enabled"],
-					   it["sources"],
-					   it["outputs"],
-					   it["encoders"],
-					   it["services"],
-					   {},
-					   {},
-					   {},
-					   {}});
+					    it["module_name"],
+					    it["id"],
+					    it["version"],
+					    it["enabled"],
+					    it["enabled"],
+					    it["sources"],
+					    it["outputs"],
+					    it["encoders"],
+					    it["services"],
+					    {},
+					    {},
+					    {},
+					    {}});
+		}
+	}
+}
+
+void PluginManager::linkUnloadedModules_()
+{
+	for (const auto &module : modules_) {
+		if (!module.enabled) {
+			auto obsModule = obs_get_disabled_module(module.module_name.c_str());
+			if (!obsModule) {
+				continue;
+			}
+			for (const auto &source : module.sources) {
+				obs_module_add_source(obsModule, source.c_str());
+			}
+			for (const auto &output : module.outputs) {
+				obs_module_add_output(obsModule, output.c_str());
+			}
+			for (const auto &encoder : module.encoders) {
+				obs_module_add_encoder(obsModule, encoder.c_str());
+			}
+			for (const auto &service : module.services) {
+				obs_module_add_service(obsModule, service.c_str());
+			}
 		}
 	}
 }
 
 void PluginManager::saveModules_()
 {
-	// TODO: Make this function safe
 	auto modulesFile = getConfigFilePath_();
 	std::ofstream outFile(modulesFile);
 	nlohmann::json data = nlohmann::json::array();
@@ -108,7 +134,7 @@ void PluginManager::addModule_(void *param, obs_module_t *newModule)
 
 	if (it == instance->modules_.end()) {
 		instance->modules_.push_back({display_name ? display_name : "", module_name, id ? id : "",
-					     version ? version : "", true, true});
+					      version ? version : "", true, true});
 	} else {
 		it->display_name = display_name ? display_name : "";
 		it->module_name = module_name;
@@ -119,7 +145,6 @@ void PluginManager::addModule_(void *param, obs_module_t *newModule)
 
 void PluginManager::addModuleTypes_()
 {
-	// TODO: Simplify this.
 	const char *source_id;
 	int i = 0;
 	while (obs_enum_source_types(i, &source_id)) {
@@ -218,30 +243,6 @@ void PluginManager::disableModules_()
 			obs_add_disabled_module(module.module_name.c_str());
 		}
 	}
-}
-
-bool PluginManager::isModuleDisabledFor(obs_source_t *source) const
-{
-	std::string sourceId = obs_source_get_id(source);
-	return std::find(disabledSources_.begin(), disabledSources_.end(), sourceId) != disabledSources_.end();
-}
-
-bool PluginManager::isModuleDisabledFor(obs_output_t *output) const
-{
-	std::string outputId = obs_output_get_id(output);
-	return std::find(disabledOutputs_.begin(), disabledOutputs_.end(), outputId) != disabledOutputs_.end();
-}
-
-bool PluginManager::isModuleDisabledFor(obs_encoder_t *encoder) const
-{
-	std::string encoderId = obs_encoder_get_id(encoder);
-	return std::find(disabledEncoders_.begin(), disabledEncoders_.end(), encoderId) != disabledEncoders_.end();
-}
-
-bool PluginManager::isModuleDisabledFor(obs_service_t *service) const
-{
-	std::string serviceId = obs_service_get_id(service);
-	return std::find(disabledServices_.begin(), disabledServices_.end(), serviceId) != disabledServices_.end();
 }
 
 void PluginManager::open()

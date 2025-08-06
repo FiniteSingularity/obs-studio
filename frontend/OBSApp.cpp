@@ -1799,8 +1799,3 @@ void OBSApp::pluginManagerOpenDialog()
 {
 	pluginManager_->open();
 }
-
-bool OBSApp::pluginManagerSourceDisabled(obs_source_t *source)
-{
-	return pluginManager_->isModuleDisabledFor(source);
-}
