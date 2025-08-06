@@ -174,6 +174,7 @@ int obs_open_module(obs_module_t **module, const char *path, const char *data_pa
 	mod.mod_name = get_module_name(mod.file);
 	mod.data_path = bstrdup(data_path);
 	mod.next = obs->first_module;
+	mod.load_state = OBS_MODULE_ENABLED;
 
 	da_init(mod.sources);
 	da_init(mod.outputs);
@@ -194,6 +195,31 @@ int obs_open_module(obs_module_t **module, const char *path, const char *data_pa
 		mod.set_locale(obs->locale);
 
 	return MODULE_SUCCESS;
+}
+
+bool obs_create_disabled_module(obs_module_t **module, const char *path, const char *data_path,
+				enum obs_module_load_state state)
+{
+	struct obs_module mod = {0};
+
+	mod.bin_path = bstrdup(path);
+	mod.file = strrchr(mod.bin_path, '/');
+	mod.file = (!mod.file) ? mod.bin_path : (mod.file + 1);
+	mod.mod_name = get_module_name(mod.file);
+	mod.data_path = bstrdup(data_path);
+	mod.load_state = state;
+
+	da_init(mod.sources);
+	da_init(mod.outputs);
+	da_init(mod.encoders);
+	da_init(mod.services);
+
+	obs_module_load_metadata(&mod);
+
+	*module = bmemdup(&mod, sizeof(mod));
+	obs->first_disabled_module = (*module);
+
+	return true;
 }
 
 bool obs_init_module(obs_module_t *module)
@@ -270,9 +296,55 @@ const char *obs_get_module_version(obs_module_t *module)
 	return module && module->metadata ? module->metadata->version : NULL;
 }
 
+void obs_module_add_source(obs_module_t *module, const char *id)
+{
+	char *source_id = bstrdup(id);
+	if (module) {
+		da_push_back(module->sources, &source_id);
+	}
+}
+
+void obs_module_add_output(obs_module_t *module, const char *id)
+{
+	char *output_id = bstrdup(id);
+	if (module) {
+		da_push_back(module->outputs, &output_id);
+	}
+}
+
+void obs_module_add_encoder(obs_module_t *module, const char *id)
+{
+	char *encoder_id = bstrdup(id);
+	if (module) {
+		da_push_back(module->encoders, &encoder_id);
+	}
+}
+
+void obs_module_add_service(obs_module_t *module, const char *id)
+{
+	char *service_id = bstrdup(id);
+	if (module) {
+		da_push_back(module->services, &service_id);
+	}
+}
+
 obs_module_t *obs_get_module(const char *name)
 {
 	obs_module_t *module = obs->first_module;
+	while (module) {
+		if (strcmp(module->mod_name, name) == 0) {
+			return module;
+		}
+
+		module = module->next;
+	}
+
+	return NULL;
+}
+
+obs_module_t *obs_get_disabled_module(const char *name)
+{
+	obs_module_t *module = obs->first_disabled_module;
 	while (module) {
 		if (strcmp(module->mod_name, name) == 0) {
 			return module;
@@ -414,6 +486,7 @@ static void load_all_callback(void *param, const struct obs_module_info2 *info)
 {
 	struct fail_info *fail_info = param;
 	obs_module_t *module;
+	obs_module_t *disabled_module;
 
 	bool is_obs_plugin;
 	bool can_load_obs_plugin;
@@ -426,11 +499,13 @@ static void load_all_callback(void *param, const struct obs_module_info2 *info)
 	}
 
 	if (!is_safe_module(info->name)) {
+		obs_create_disabled_module(&disabled_module, info->bin_path, info->data_path, OBS_MODULE_DISABLED_SAFE);
 		blog(LOG_WARNING, "Skipping module '%s', not on safe list", info->name);
 		return;
 	}
 
 	if (is_disabled_module(info->name)) {
+		obs_create_disabled_module(&disabled_module, info->bin_path, info->data_path, OBS_MODULE_DISABLED);
 		blog(LOG_WARNING, "Skipping module '%s', is disabled", info->name);
 		return;
 	}
@@ -461,8 +536,10 @@ static void load_all_callback(void *param, const struct obs_module_info2 *info)
 		return;
 	}
 
-	if (!obs_init_module(module))
+	if (!obs_init_module(module)) {
 		free_module(module);
+		obs_create_disabled_module(&disabled_module, info->bin_path, info->data_path, OBS_MODULE_ERROR);
+	}
 
 	UNUSED_PARAMETER(param);
 	return;
@@ -713,15 +790,28 @@ void free_module(struct obs_module *mod)
 		/* os_dlclose(mod->module); */
 	}
 
-	for (obs_module_t *m = obs->first_module; !!m; m = m->next) {
-		if (m->next == mod) {
-			m->next = mod->next;
-			break;
+	// Is this module an active/loaded module, or a disabled module?
+	if (mod->load_state == OBS_MODULE_ENABLED) {
+		for (obs_module_t *m = obs->first_module; !!m; m = m->next) {
+			if (m->next == mod) {
+				m->next = mod->next;
+				break;
+			}
 		}
-	}
 
-	if (obs->first_module == mod)
-		obs->first_module = mod->next;
+		if (obs->first_module == mod)
+			obs->first_module = mod->next;
+	} else {
+		for (obs_module_t *m = obs->first_disabled_module; !!m; m = m->next) {
+			if (m->next == mod) {
+				m->next = mod->next;
+				break;
+			}
+		}
+
+		if (obs->first_disabled_module == mod)
+			obs->first_disabled_module = mod->next;
+	}
 
 	bfree(mod->mod_name);
 	bfree(mod->bin_path);

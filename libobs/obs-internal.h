@@ -113,6 +113,8 @@ struct obs_module {
 	void *module;
 	bool loaded;
 
+	enum obs_module_load_state load_state;
+
 	bool (*load)(void);
 	void (*unload)(void);
 	void (*post_load)(void);
@@ -128,6 +130,20 @@ struct obs_module {
 	struct obs_module_metadata *metadata;
 
 	struct obs_module *next;
+
+	DARRAY(char *) sources;
+	DARRAY(char *) outputs;
+	DARRAY(char *) encoders;
+	DARRAY(char *) services;
+};
+
+struct obs_disabled_module {
+	char *mod_name;
+
+	enum obs_module_load_state load_state;
+
+	struct obs_module_metadata *metadata;
+	struct obs_disabled_module *next;
 
 	DARRAY(char *) sources;
 	DARRAY(char *) outputs;
@@ -533,13 +549,11 @@ typedef DARRAY(struct obs_source_info) obs_source_info_array_t;
 
 struct obs_core {
 	struct obs_module *first_module;
+	struct obs_module *first_disabled_module;
+
 	DARRAY(struct obs_module_path) module_paths;
 	DARRAY(char *) safe_modules;
-	// TODO: Remove this comment
-	// Structure for disabled modules.
 	DARRAY(char *) disabled_modules;
-	// TODO: Remove this comment
-	// Structure for core modules;
 	DARRAY(char *) core_modules;
 
 	obs_source_info_array_t source_types;

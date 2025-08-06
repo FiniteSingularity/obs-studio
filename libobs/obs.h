@@ -160,6 +160,17 @@ enum obs_bounds_type {
 	OBS_BOUNDS_MAX_ONLY,        /**< no scaling, maximum size only */
 };
 
+/**
+ * Used by libobs to define the state of a plugin/module.
+ */
+enum obs_module_load_state {
+	OBS_MODULE_MISSING,
+	OBS_MODULE_ENABLED,
+	OBS_MODULE_DISABLED,
+	OBS_MODULE_DISABLED_SAFE,
+	OBS_MODULE_ERROR
+};
+
 struct obs_transform_info {
 	struct vec2 pos;
 	float rot;
@@ -476,6 +487,9 @@ EXPORT bool obs_get_audio_info2(struct obs_audio_info2 *oai2);
  */
 EXPORT int obs_open_module(obs_module_t **module, const char *path, const char *data_path);
 
+EXPORT bool obs_create_disabled_module(obs_module_t **module, const char *path, const char *data_path,
+				       enum obs_module_load_state state);
+
 /**
  * Initializes the module, which calls its obs_module_load export.  If the
  * module is already loaded, then this function does nothing and returns
@@ -485,6 +499,9 @@ EXPORT bool obs_init_module(obs_module_t *module);
 
 /** Returns a module based upon its name, or NULL if not found */
 EXPORT obs_module_t *obs_get_module(const char *name);
+
+/** Returns a module if it is disabled, or NULL if not found in the disabled list */
+EXPORT obs_module_t *obs_get_disabled_module(const char *name);
 
 /** Gets library of module */
 EXPORT void *obs_get_module_lib(obs_module_t *module);
@@ -515,6 +532,18 @@ EXPORT const char *obs_get_module_binary_path(obs_module_t *module);
 
 /** Returns the module data path */
 EXPORT const char *obs_get_module_data_path(obs_module_t *module);
+
+/** Adds a source type id to the module provided sources list */
+EXPORT void obs_module_add_source(obs_module_t *module, const char *id);
+
+/** Adds a output type id to the module provided outputs list */
+EXPORT void obs_module_add_output(obs_module_t *module, const char *id);
+
+/** Adds an encoder type id to the module provided encoders list */
+EXPORT void obs_module_add_encoder(obs_module_t *module, const char *id);
+
+/** Adds an encoder service id to the module provided services list */
+EXPORT void obs_module_add_service(obs_module_t *module, const char *id);
 
 #ifndef SWIG
 /**
@@ -1007,6 +1036,9 @@ EXPORT const char *obs_source_get_display_name(const char *id);
 
 /** Returns a pointer to the module which provides the source */
 EXPORT obs_module_t *obs_source_get_module(const char *id);
+
+/** Returns the load state of a source's module given the id */
+EXPORT enum obs_module_load_state obs_source_load_state(const char *id);
 
 /**
  * Creates a source of the specified type with the specified settings.
@@ -1847,6 +1879,12 @@ EXPORT void obs_scene_prune_sources(obs_scene_t *scene);
 
 EXPORT const char *obs_output_get_display_name(const char *id);
 
+/** Returns a pointer to the module which provides the output */
+EXPORT obs_module_t *obs_output_get_module(const char *id);
+
+/** Returns the load state of a output's module given the id */
+EXPORT enum obs_module_load_state obs_output_load_state(const char *id);
+
 /**
  * Creates an output.
  *
@@ -2179,6 +2217,12 @@ EXPORT uint64_t obs_output_get_pause_offset(obs_output_t *output);
 
 EXPORT const char *obs_encoder_get_display_name(const char *id);
 
+/** Returns a pointer to the module which provides the encoder */
+EXPORT obs_module_t *obs_encoder_get_module(const char *id);
+
+/** Returns the load state of an encoder's module given the id */
+EXPORT enum obs_module_load_state obs_encoder_load_state(const char *id);
+
 /**
  * Creates a video encoder context
  *
@@ -2424,6 +2468,12 @@ EXPORT void obs_encoder_group_destroy(obs_encoder_group_t *group);
 /* Stream Services */
 
 EXPORT const char *obs_service_get_display_name(const char *id);
+
+/** Returns a pointer to the module which provides the service */
+EXPORT obs_module_t *obs_service_get_module(const char *id);
+
+/** Returns the load state of a service's module given the id */
+EXPORT enum obs_module_load_state obs_service_load_state(const char *id);
 
 EXPORT obs_service_t *obs_service_create(const char *id, const char *name, obs_data_t *settings,
 					 obs_data_t *hotkey_data);
