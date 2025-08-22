@@ -327,9 +327,6 @@ public:
 
 	inline bool Closing() { return closing; }
 
-	// TODO: Determine best place in header files for this
-	static void AddNewModules(void *param, obs_module_t *module);
-
 protected:
 	virtual void closeEvent(QCloseEvent *event) override;
 	virtual bool nativeEvent(const QByteArray &eventType, void *message, qintptr *result) override;

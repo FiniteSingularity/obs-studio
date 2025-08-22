@@ -1017,16 +1017,16 @@ void OBSBasic::OBSInit()
 #endif
 	struct obs_module_failure_info mfi;
 
-	/* Safe Mode disables third-party plugins so we don't need to add each
-	 * path outside the OBS bundle/installation. */
+	// Safe Mode disables third-party plugins so we don't need to add each
+	// path outside the OBS bundle/installation.
 	if (safe_mode || disable_3p_plugins) {
 		SetSafeModuleNames();
 	} else {
 		AddExtraModulePaths();
 	}
 
-	/* Core modules are not allowed to be disabled by the user via plugin
-	 * manager. */
+	// Core modules are not allowed to be disabled by the user via plugin
+	// manager.
 	SetCoreModuleNames();
 
 	/* Modules can access frontend information (i.e. profile and scene collection data) during their initialization, and some modules (e.g. obs-websockets) are known to use the filesystem location of the current profile in their own code.

@@ -164,6 +164,7 @@ enum obs_bounds_type {
  * Used by libobs to define the state of a plugin/module.
  */
 enum obs_module_load_state {
+	OBS_MODULE_INVALID,
 	OBS_MODULE_MISSING,
 	OBS_MODULE_ENABLED,
 	OBS_MODULE_DISABLED,
@@ -630,20 +631,18 @@ EXPORT lookup_t *obs_module_load_locale(obs_module_t *module, const char *defaul
  */
 EXPORT char *obs_find_module_file(obs_module_t *module, const char *file);
 
-// TODO: Document this api call better.
 /**
  * Adds a module name to the disabled modules list.
  *
- * @param  name    The name of the module to disable.
+ * @param  name    The name of the module to disable
  */
 EXPORT void obs_add_disabled_module(const char *name);
 
-// TODO: Document this api call better.
 /**
  * Returns if a module can be disabled.
  *
- * @param  name    The name of the module to check.
- * @return         Boolean to indicate disableableness
+ * @param  name    The name of the module to check
+ * @return         Boolean to indicate if module can be disabled
  */
 EXPORT bool obs_get_module_allow_disable(const char *name);
 

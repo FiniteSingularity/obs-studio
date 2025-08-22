@@ -38,12 +38,24 @@ private:
 	void disableModules_();
 	void addModuleTypes_();
 	void linkUnloadedModules_();
-	static void addModule_(void *param, obs_module_t *newModule);
 
 public:
 	void preLoad();
 	void postLoad();
 	void open();
+
+	friend void addModuleToPluginManagerImpl(void *param, obs_module_t *newModule);
 };
 
+void addModuleToPluginManagerImpl(void *param, obs_module_t *newModule);
+
 }; // namespace OBS
+
+// Anonymous namespace function to add module to plugin manager
+// via libobs's module enumeration.
+namespace {
+inline void addModuleToPluginManager(void *param, obs_module_t *newModule)
+{
+	OBS::addModuleToPluginManagerImpl(param, newModule);
+}
+} // namespace
