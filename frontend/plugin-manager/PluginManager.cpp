@@ -15,28 +15,27 @@ extern bool restart;
 
 namespace OBS {
 
-void addModuleToPluginManagerImpl(void* param, obs_module_t* newModule)
+void addModuleToPluginManagerImpl(void *param, obs_module_t *newModule)
 {
-	auto& instance = *static_cast<OBS::PluginManager*>(param);
+	auto &instance = *static_cast<OBS::PluginManager *>(param);
 	std::string moduleName = obs_get_module_file_name(newModule);
 	moduleName = moduleName.substr(0, moduleName.rfind("."));
 
 	if (!obs_get_module_allow_disable(moduleName.c_str()))
 		return;
 
-	const char* display_name = obs_get_module_name(newModule);
+	const char *display_name = obs_get_module_name(newModule);
 	std::string module_name = moduleName;
-	const char* id = obs_get_module_id(newModule);
-	const char* version = obs_get_module_version(newModule);
+	const char *id = obs_get_module_id(newModule);
+	const char *version = obs_get_module_version(newModule);
 
 	auto it = std::find_if(instance.modules_.begin(), instance.modules_.end(),
-		[&](OBS::ModuleInfo module) { return module.module_name == moduleName; });
+			       [&](OBS::ModuleInfo module) { return module.module_name == moduleName; });
 
 	if (it == instance.modules_.end()) {
-		instance.modules_.push_back({ display_name ? display_name : "", module_name, id ? id : "",
-						version ? version : "", true, true });
-	}
-	else {
+		instance.modules_.push_back({display_name ? display_name : "", module_name, id ? id : "",
+					     version ? version : "", true, true});
+	} else {
 		it->display_name = display_name ? display_name : "";
 		it->module_name = module_name;
 		it->id = id ? id : "";
@@ -82,23 +81,21 @@ void PluginManager::loadModules_()
 		for (auto it : data) {
 			ModuleInfo obsModule;
 			try {
-				obsModule = {
-					it.at("display_name"),
-					it.at("module_name"),
-					it.at("id"),
-					it.at("version"),
-					it.at("enabled"),
-					it.at("enabled"),
-					it.at("sources"),
-					it.at("outputs"),
-					it.at("encoders"),
-					it.at("services"),
-					{},
-					{},
-					{},
-					{}
-				};
-			} catch (const nlohmann::json::out_of_range& error) {
+				obsModule = {it.at("display_name"),
+					     it.at("module_name"),
+					     it.at("id"),
+					     it.at("version"),
+					     it.at("enabled"),
+					     it.at("enabled"),
+					     it.at("sources"),
+					     it.at("outputs"),
+					     it.at("encoders"),
+					     it.at("services"),
+					     {},
+					     {},
+					     {},
+					     {}};
+			} catch (const nlohmann::json::out_of_range &error) {
 				blog(LOG_WARNING, "Error loading module info: %s", error.what());
 				continue;
 			}
@@ -286,4 +283,3 @@ void PluginManager::open()
 }
 
 }; // namespace OBS
-
