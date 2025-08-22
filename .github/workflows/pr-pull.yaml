@@ -5,7 +5,7 @@ on:
   pull_request:
     paths-ignore:
       - '**.md'
-    branches: [master, feature/plugin-manager-base]
+    branches: [master]
     types: [ opened, synchronize, reopened ]
 permissions:
   contents: read
