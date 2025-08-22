@@ -207,6 +207,7 @@ bool obs_create_disabled_module(obs_module_t **module, const char *path, const c
 	mod.file = (!mod.file) ? mod.bin_path : (mod.file + 1);
 	mod.mod_name = get_module_name(mod.file);
 	mod.data_path = bstrdup(data_path);
+	mod.next = obs->first_disabled_module;
 	mod.load_state = state;
 
 	da_init(mod.sources);
@@ -790,7 +791,7 @@ void free_module(struct obs_module *mod)
 		/* os_dlclose(mod->module); */
 	}
 
-	// Is this module an active/loaded module, or a disabled module?
+	/* Is this module an active / loaded module, or a disabled module? */
 	if (mod->load_state == OBS_MODULE_ENABLED) {
 		for (obs_module_t *m = obs->first_module; !!m; m = m->next) {
 			if (m->next == mod) {

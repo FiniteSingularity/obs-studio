@@ -178,10 +178,6 @@ struct obs_module_metadata {
 	char *repository_url;
 	char *support_url;
 	char *website_url;
-	//char** authors;
-	//char** obs_compatibility;
-	//char** tags;
-	// DEPENDENCIES?
 	char *name;
 };
 
@@ -197,10 +193,6 @@ static inline void free_module_metadata(struct obs_module_metadata *omi)
 		bfree(omi->repository_url);
 		bfree(omi->support_url);
 		bfree(omi->website_url);
-		//char** authors;
-		//char** obs_compatibility;
-		//char** tags;
-		// DEPENDENCIES?
 		bfree(omi->name);
 	}
 }
