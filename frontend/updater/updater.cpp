@@ -707,7 +707,7 @@ static inline bool FileExists(const wchar_t *path)
 static bool NonCorePackageInstalled(const char *name)
 {
 	if (strcmp(name, "obs-browser") == 0)
-		return FileExists(L"obs-plugins\\64bit\\obs-browser.dll");
+		return FileExists(L"core\\obs-browser\\obs-browser.dll");
 
 	return false;
 }
@@ -1672,7 +1672,7 @@ static bool Update(wchar_t *cmdLine)
 		StringCbCat(regsvr, sizeof(regsvr), L"\\regsvr32.exe");
 
 		StringCbCopy(src, sizeof(src), obs_base_directory);
-		StringCbCat(src, sizeof(src), L"\\data\\obs-plugins\\win-dshow\\");
+		StringCbCat(src, sizeof(src), L"\\core\\win-dshow\\data\\");
 
 		StringCbCopy(tmp, sizeof(tmp), L"\"");
 		StringCbCat(tmp, sizeof(tmp), regsvr);
