@@ -21,6 +21,7 @@
 #include "obs-defs.h"
 #include "obs-internal.h"
 #include "obs-module.h"
+#include "obs-core-modules.h"
 
 extern const char *get_module_extension(void);
 
@@ -179,6 +180,15 @@ int obs_open_module(obs_module_t **module, const char *path, const char *data_pa
 	mod.file = strrchr(mod.bin_path, '/');
 	mod.file = (!mod.file) ? mod.bin_path : (mod.file + 1);
 	mod.mod_name = get_module_name(mod.file);
+
+	// Check if mod_name already exists return MODULE_DUPLICATE error code
+	// if it does.
+	obs_module_t* existing = obs_get_module(mod.mod_name);
+	if (existing) {
+		blog(LOG_WARNING, "Module at '%s'was previously loaded.", path);
+		return MODULE_DUPLICATE;
+	}
+
 	mod.data_path = bstrdup(data_path);
 	mod.next = obs->first_module;
 	mod.load_state = OBS_MODULE_ENABLED;
@@ -364,6 +374,16 @@ obs_module_t *obs_get_disabled_module(const char *name)
 	return NULL;
 }
 
+bool obs_is_legacy_plugin(const char* name)
+{
+	for (int i = 0; i < obs->legacy_plugin_modules.num; i++) {
+		if (strcmp(name, obs->legacy_plugin_modules.array[i]) == 0) {
+			return true;
+		}
+	}
+	return false;
+}
+
 void *obs_get_module_lib(obs_module_t *module)
 {
 	return module ? module->module : NULL;
@@ -403,8 +423,7 @@ char *obs_module_get_config_path(obs_module_t *module, const char *file)
 	return output.array;
 }
 
-void obs_add_module_path(const char *bin, const char *data)
-{
+void obs_add_module_path_internal(const char *bin, const char *data, enum obs_module_type module_type) {
 	struct obs_module_path omp;
 
 	if (!obs || !bin || !data)
@@ -412,7 +431,13 @@ void obs_add_module_path(const char *bin, const char *data)
 
 	omp.bin = bstrdup(bin);
 	omp.data = bstrdup(data);
+	omp.module_type = module_type;
 	da_push_back(obs->module_paths, &omp);
+}
+
+void obs_add_module_path(const char *bin, const char *data)
+{
+	obs_add_module_path_internal(bin, data, LEGACY_PLUGIN);
 }
 
 void obs_add_safe_module(const char *name)
@@ -431,6 +456,24 @@ void obs_add_core_module(const char *name)
 
 	char *item = bstrdup(name);
 	da_push_back(obs->core_modules, &item);
+}
+
+void obs_add_plugin_module(const char* name)
+{
+	if (!obs || !name)
+		return;
+
+	char *item = bstrdup(name);
+	da_push_back(obs->plugin_modules, &item);
+}
+
+void obs_add_legacy_plugin_module(const char *name)
+{
+	if (!obs || !name)
+		return;
+
+	char *item = bstrdup(name);
+	da_push_back(obs->legacy_plugin_modules, &item);
 }
 
 void obs_add_disabled_module(const char *name)
@@ -516,7 +559,6 @@ static void load_all_callback(void *param, const struct obs_module_info2 *info)
 		blog(LOG_WARNING, "Skipping module '%s', is disabled", info->name);
 		return;
 	}
-
 	int code = obs_open_module(&module, info->bin_path, info->data_path);
 	switch (code) {
 	case MODULE_MISSING_EXPORTS:
@@ -535,6 +577,9 @@ static void load_all_callback(void *param, const struct obs_module_info2 *info)
 		obs_create_disabled_module(&disabled_module, info->bin_path, info->data_path,
 					   OBS_MODULE_FAILED_TO_OPEN);
 		goto load_failure;
+	case MODULE_DUPLICATE:
+		blog(LOG_DEBUG, "Failed to load module file at '%s', module previously loaded", info->bin_path);
+		goto load_failure;
 	case MODULE_HARDCODED_SKIP:
 		return;
 	}
@@ -543,6 +588,18 @@ static void load_all_callback(void *param, const struct obs_module_info2 *info)
 		free_module(module);
 		obs_create_disabled_module(&disabled_module, info->bin_path, info->data_path,
 					   OBS_MODULE_FAILED_TO_INITIALIZE);
+	}
+
+	switch (info->module_type) {
+	case CORE:
+		obs_add_core_module(info->name);
+		break;
+	case PLUGIN:
+		obs_add_plugin_module(info->name);
+		break;
+	case LEGACY_PLUGIN:
+		obs_add_legacy_plugin_module(info->name);
+		break;
 	}
 
 	UNUSED_PARAMETER(param);
@@ -577,6 +634,12 @@ static const char *obs_load_all_modules2_name = "obs_load_all_modules2";
 
 void obs_load_all_modules2(struct obs_module_failure_info *mfi)
 {
+	for (size_t index = 0; index < obs_core_modules_count; ++index) {
+		const char *core_module_name = *(obs_core_modules + index);
+
+		blog(LOG_INFO, "Registered core module: %s", core_module_name);
+	}
+
 	struct fail_info fail_info = {0};
 	memset(mfi, 0, sizeof(*mfi));
 
@@ -705,6 +768,7 @@ static void process_found_module(struct obs_module_path *omp, const char *path, 
 		info.bin_path = parsed_bin_path.array;
 		info.data_path = parsed_data_dir;
 		info.name = name.array;
+		info.module_type = omp->module_type;
 		callback(param, &info);
 	}
 

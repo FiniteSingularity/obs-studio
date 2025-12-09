@@ -131,6 +131,8 @@ struct obs_module {
 
 	struct obs_module *next;
 
+	enum obs_module_type module_type;
+
 	DARRAY(char *) sources;
 	DARRAY(char *) outputs;
 	DARRAY(char *) encoders;
@@ -153,9 +155,17 @@ struct obs_disabled_module {
 
 extern void free_module(struct obs_module *mod);
 
+enum obs_module_type {
+	UNDEFINED,
+	CORE,
+	PLUGIN,
+	LEGACY_PLUGIN
+};
+
 struct obs_module_path {
 	char *bin;
 	char *data;
+	enum obs_module_type module_type;
 };
 
 static inline void free_module_path(struct obs_module_path *omp)
@@ -549,6 +559,8 @@ struct obs_core {
 	DARRAY(char *) safe_modules;
 	DARRAY(char *) disabled_modules;
 	DARRAY(char *) core_modules;
+	DARRAY(char *) plugin_modules;
+	DARRAY(char *) legacy_plugin_modules;
 
 	obs_source_info_array_t source_types;
 	obs_source_info_array_t input_types;
@@ -1522,3 +1534,6 @@ extern void source_profiler_source_render_end(obs_source_t *source, uint64_t sta
 
 /* Remove source from profiler hashmaps */
 extern void source_profiler_remove_source(obs_source_t *source);
+
+/* Add a module path with module type */
+extern void obs_add_module_path_internal(const char *bin, const char *data, enum obs_module_type module_type);

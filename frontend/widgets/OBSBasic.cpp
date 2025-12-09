@@ -190,12 +190,12 @@ static void SetSafeModuleNames()
 	string module;
 	stringstream modules_(SAFE_MODULES);
 
-	while (getline(modules_, module, '|')) {
-		/* When only disallowing third-party plugins, still add
-		 * "unsafe" bundled modules to the safe list. */
-		if (disable_3p_plugins || !unsafe_modules.count(module))
-			obs_add_safe_module(module.c_str());
-	}
+	//while (getline(modules_, module, '|')) {
+	//	/* When only disallowing third-party plugins, still add
+	//	 * "unsafe" bundled modules to the safe list. */
+	//	if (disable_3p_plugins || !unsafe_modules.count(module))
+	//		obs_add_safe_module(module.c_str());
+	//}
 #endif
 }
 
@@ -208,12 +208,12 @@ static void SetCoreModuleNames()
 	if (safeModules.empty()) {
 		throw "SAFE_MODULES is empty";
 	}
-	string module;
-	stringstream modules_(SAFE_MODULES);
+	//string module;
+	//stringstream modules_(SAFE_MODULES);
 
-	while (getline(modules_, module, '|')) {
-		obs_add_core_module(module.c_str());
-	}
+	//while (getline(modules_, module, '|')) {
+	//	obs_add_core_module(module.c_str());
+	//}
 #endif
 }
 

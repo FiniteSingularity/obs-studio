@@ -45,12 +45,18 @@ static const char *module_data[] = {
 	"../../data/obs-plugins/%module%"
 };
 
+static const enum obs_module_type module_types[] = {
+	CORE,
+	PLUGIN,
+	LEGACY_PLUGIN
+};
+
 static const int module_patterns_size = sizeof(module_bin) / sizeof(module_bin[0]);
 
 void add_default_module_paths(void)
 {
 	for (int i = 0; i < module_patterns_size; i++)
-		obs_add_module_path(module_bin[i], module_data[i]);
+		obs_add_module_path_internal(module_bin[i], module_data[i], module_types[i]);
 }
 
 /* on windows, points to [base directory]/data/libobs */

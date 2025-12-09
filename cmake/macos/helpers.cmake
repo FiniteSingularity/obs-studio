@@ -302,8 +302,7 @@ function(set_target_properties_obs target)
         set_property(GLOBAL APPEND PROPERTY _OBS_FRAMEWORKS ${cef_items})
       endif()
     endif()
-
-    set_property(GLOBAL APPEND PROPERTY OBS_MODULES_ENABLED ${target})
+    
     set_property(GLOBAL APPEND PROPERTY _OBS_DEPENDENCIES ${target})
   endif()
 

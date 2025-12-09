@@ -1374,10 +1374,21 @@ struct obs_cmdline_args obs_get_cmdline_args(void)
 	return cmdline_args;
 }
 
-void obs_shutdown(void)
+void release_module_list(struct obs_module** first_module)
 {
 	struct obs_module *module;
 
+	module = *first_module;
+	while (module) {
+		struct obs_module *next = module->next;
+		free_module(module);
+		module = next;
+	}
+	*first_module = NULL;
+}
+
+void obs_shutdown(void)
+{
 	obs_wait_for_destroy_queue();
 
 	for (size_t i = 0; i < obs->source_types.num; i++) {
@@ -1413,21 +1424,8 @@ void obs_shutdown(void)
 	stop_audio();
 	stop_hotkeys();
 
-	module = obs->first_module;
-	while (module) {
-		struct obs_module *next = module->next;
-		free_module(module);
-		module = next;
-	}
-	obs->first_module = NULL;
-
-	module = obs->first_disabled_module;
-	while (module) {
-		struct obs_module *next = module->next;
-		free_module(module);
-		module = next;
-	}
-	obs->first_disabled_module = NULL;
+	release_module_list(&obs->first_module);
+	release_module_list(&obs->first_disabled_module);
 
 	obs_free_data();
 	obs_free_audio();
@@ -1459,6 +1457,16 @@ void obs_shutdown(void)
 		bfree(obs->core_modules.array[i]);
 	}
 	da_free(obs->core_modules);
+
+	for (size_t i = 0; i < obs->plugin_modules.num; i++) {
+		bfree(obs->plugin_modules.array[i]);
+	}
+	da_free(obs->plugin_modules);
+
+	for (size_t i = 0; i < obs->legacy_plugin_modules.num; i++) {
+		bfree(obs->legacy_plugin_modules.array[i]);
+	}
+	da_free(obs->legacy_plugin_modules);
 
 	if (obs->name_store_owned)
 		profiler_name_store_free(obs->name_store);

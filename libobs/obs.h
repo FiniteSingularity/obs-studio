@@ -505,6 +505,9 @@ EXPORT obs_module_t *obs_get_module(const char *name);
 /** Returns a module if it is disabled, or NULL if not found in the disabled list */
 EXPORT obs_module_t *obs_get_disabled_module(const char *name);
 
+/** Returns true if a module is in legacy format. */
+EXPORT bool obs_is_legacy_plugin(const char *name);
+
 /** Gets library of module */
 EXPORT void *obs_get_module_lib(obs_module_t *module);
 
@@ -603,6 +606,7 @@ struct obs_module_info2 {
 	const char *bin_path;
 	const char *data_path;
 	const char *name;
+	enum obs_module_type module_type;
 };
 
 typedef void (*obs_find_module_callback2_t)(void *param, const struct obs_module_info2 *info);

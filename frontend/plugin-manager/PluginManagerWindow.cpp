@@ -90,12 +90,17 @@ PluginManagerWindow::PluginManagerWindow(std::vector<ModuleInfo> const &modules,
 		std::string id = metadata.module_name;
 		// Check if the module is missing:
 		bool missing = !obs_get_module(id.c_str()) && !obs_get_disabled_module(id.c_str());
+		bool legacy = obs_is_legacy_plugin(id.c_str());
 
 		QString name = !metadata.display_name.empty() ? metadata.display_name.c_str()
 							      : metadata.module_name.c_str();
 
 		if (missing && missingIndex == -1) {
 			missingIndex = row;
+		}
+
+		if (legacy) {
+			name += " LEGACY";
 		}
 
 		auto item = new QCheckBox(name);
