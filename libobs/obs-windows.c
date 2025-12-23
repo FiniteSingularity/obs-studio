@@ -34,29 +34,15 @@ const char *get_module_extension(void)
 	return ".dll";
 }
 
-static const char *module_bin[] = {
-	"../../core/%module%",
-	"../../plugins/%module%",
-	"../../obs-plugins/64bit"
-};
-static const char *module_data[] = {
-	"../../core/%module%/data",
-	"../../plugins/%module%/data",
-	"../../data/obs-plugins/%module%"
-};
-
-static const enum obs_module_type module_types[] = {
-	CORE,
-	PLUGIN,
-	LEGACY_PLUGIN
-};
-
-static const int module_patterns_size = sizeof(module_bin) / sizeof(module_bin[0]);
+static const char* core_module_bin = "../../core/%module%";
 
 void add_default_module_paths(void)
 {
-	for (int i = 0; i < module_patterns_size; i++)
-		obs_add_module_path_internal(module_bin[i], module_data[i], module_types[i]);
+	obs_add_core_module_path(core_module_bin);
+	//if (PORTABLE_MODE) {
+	//	obs_add_plugin_module_path(portable_plugin_module_bin);
+	//	obs_add_legacy_plugin_module_path(portable_legacy_plugin_module_bin, portable_legacy_module_data);
+	//}
 }
 
 /* on windows, points to [base directory]/data/libobs */

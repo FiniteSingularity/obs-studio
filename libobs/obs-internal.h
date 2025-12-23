@@ -155,13 +155,6 @@ struct obs_disabled_module {
 
 extern void free_module(struct obs_module *mod);
 
-enum obs_module_type {
-	UNDEFINED,
-	CORE,
-	PLUGIN,
-	LEGACY_PLUGIN
-};
-
 struct obs_module_path {
 	char *bin;
 	char *data;
@@ -1534,6 +1527,3 @@ extern void source_profiler_source_render_end(obs_source_t *source, uint64_t sta
 
 /* Remove source from profiler hashmaps */
 extern void source_profiler_remove_source(obs_source_t *source);
-
-/* Add a module path with module type */
-extern void obs_add_module_path_internal(const char *bin, const char *data, enum obs_module_type module_type);

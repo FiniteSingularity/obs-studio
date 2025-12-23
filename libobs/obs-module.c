@@ -423,7 +423,7 @@ char *obs_module_get_config_path(obs_module_t *module, const char *file)
 	return output.array;
 }
 
-void obs_add_module_path_internal(const char *bin, const char *data, enum obs_module_type module_type) {
+void obs_add_module_path_info(const char *bin, const char *data, enum obs_module_type module_type) {
 	struct obs_module_path omp;
 
 	if (!obs || !bin || !data)
@@ -437,7 +437,30 @@ void obs_add_module_path_internal(const char *bin, const char *data, enum obs_mo
 
 void obs_add_module_path(const char *bin, const char *data)
 {
-	obs_add_module_path_internal(bin, data, LEGACY_PLUGIN);
+	obs_add_module_path_info(bin, data, LEGACY_PLUGIN);
+}
+
+void obs_add_core_module_path(const char* bin)
+{
+	struct dstr data;
+	dstr_init_copy(&data, bin);
+	dstr_cat(&data, "/data");
+	obs_add_module_path_info(bin, data.array, CORE);
+	dstr_free(&data);
+}
+
+void obs_add_plugin_module_path(const char* bin)
+{
+	struct dstr data;
+	dstr_init_copy(&data, bin);
+	dstr_cat(&data, "/data");
+	obs_add_module_path_info(bin, data.array, PLUGIN);
+	dstr_free(&data);
+}
+
+void obs_add_legacy_plugin_module_path(const char* bin, const char* data)
+{
+	obs_add_module_path_info(bin, data, LEGACY_PLUGIN);
 }
 
 void obs_add_safe_module(const char *name)
@@ -755,6 +778,15 @@ static void process_found_module(struct obs_module_path *omp, const char *path, 
 	char *ext = strrchr(name.array, '.');
 	if (ext)
 		dstr_resize(&name, ext - name.array);
+
+	/* If a module is located with core modules, but is not registered
+	 * as a core module, log the warning and skip loading it. */
+	if (omp->module_type == CORE && !obs_is_core_module(name.array)) {
+		blog(LOG_WARNING, "Module %s is not registered as a core module. Not loading.", name.array);
+		dstr_free(&name);
+		dstr_free(&parsed_bin_path);
+		return;
+	}
 
 	if (!directory) {
 		dstr_copy(&parsed_bin_path, path);

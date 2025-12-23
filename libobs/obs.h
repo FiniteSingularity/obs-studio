@@ -173,6 +173,14 @@ enum obs_module_load_state {
 	OBS_MODULE_FAILED_TO_INITIALIZE,
 };
 
+
+enum obs_module_type {
+	UNDEFINED,
+	CORE,
+	PLUGIN,
+	LEGACY_PLUGIN
+};
+
 struct obs_transform_info {
 	struct vec2 pos;
 	float rot;
@@ -552,6 +560,9 @@ EXPORT void obs_module_add_service(obs_module_t *module, const char *id);
 
 #ifndef SWIG
 /**
+ * This function to be deprecated.
+ */
+/**
  * Adds a module search path to be used with obs_find_modules.  If the search
  * path strings contain %module%, that text will be replaced with the module
  * name when used.
@@ -562,9 +573,48 @@ EXPORT void obs_module_add_service(obs_module_t *module, const char *id);
 EXPORT void obs_add_module_path(const char *bin, const char *data);
 
 /**
+ * Adds a module search path to be used with obs_find_modules.  If the search
+ * path strings contain %module%, that text will be replaced with the module
+ * name when used.
+ *
+ * @param  bin          Specifies the module's binary directory search path.
+ * @param  data         Specifies the module's data directory search path.
+ * @param  module_type  Specifies if the module is core, plugin, or legacy.
+ */
+EXPORT void obs_add_module_path_info(const char *bin, const char *data, enum obs_module_type module_type);
+
+/**
+ * Adds a core module search path to be used with obs_find_modules.
+ * path strings contain %module%, that text will be replaced with the module
+ * name when used. Automatically appends data search path. If at load time
+ * a module is not in the registered core modules list, it will not be loaded.
+ *
+ * @param  bin          Specifies the module's binary directory search path.
+ */
+EXPORT void obs_add_core_module_path(const char *bin);
+
+/**
+ * Adds a plugin module search path to be used with obs_find_modules.
+ * path strings contain %module%, that text will be replaced with the module
+ * name when used. Automatically appends data search path.
+ *
+ * @param  bin          Specifies the module's binary directory search path.
+ */
+EXPORT void obs_add_plugin_module_path(const char *bin);
+
+/**
+ * Adds a legacy plugin module search path to be used with obs_find_modules.
+ * path strings contain %module%, that text will be replaced with the module
+ * name when used.
+ *
+ * @param  bin          Specifies the module's binary directory search path.
+ * @param  data         Specifies the module's data directory search path.
+ */
+EXPORT void obs_add_legacy_plugin_module_path(const char *bin, const char *data);
+
+/**
  * Adds a module to the list of modules allowed to load in Safe Mode.
  * If the list is empty, all modules are allowed.
- *
  * @param  name  Specifies the module's name (filename sans extension).
  */
 EXPORT void obs_add_safe_module(const char *name);

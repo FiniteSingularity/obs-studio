@@ -536,6 +536,10 @@ function(set_obs_core_modules)
 
   set(OBS_CORE_MODULE_COUNT "${core_modules_count}")
   set(OBS_CORE_MODULE_LIST "\t\"${core_modules_array_content}\"")
+  get_property(OBS_MODULES_ENABLED GLOBAL PROPERTY OBS_MODULES_ENABLED)
+  foreach(feature IN LISTS OBS_MODULES_ENABLED)
+    message(NOTICE " - ${feature}")
+  endforeach()
 
   configure_file(
     "${libobs_source_directory}/obs-core-modules.c.in"

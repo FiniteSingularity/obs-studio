@@ -99,6 +99,12 @@ extern void RegisterRestreamAuth();
 extern void RegisterYoutubeAuth();
 #endif
 
+#ifdef _WIN32
+static const char *portable_plugin_module_bin = "../../plugins/%module%";
+static const char *portable_legacy_plugin_module_bin = "../../obs-plugins/64bit";
+static const char *portable_legacy_plugin_module_data = "../../data/obs-plugins/%module%";
+#endif
+
 struct QCef;
 
 extern QCef *cef;
@@ -109,32 +115,42 @@ extern void CheckExistingCookieId();
 
 static void AddExtraModulePaths()
 {
-	string plugins_path, plugins_data_path;
+	string plugins_path, legacy_plugins_path, legacy_plugins_data_path;
 	char *s;
 
 	s = getenv("OBS_PLUGINS_PATH");
 	if (s)
 		plugins_path = s;
 
-	s = getenv("OBS_PLUGINS_DATA_PATH");
+	s = getenv("OBS_LEGACY_PLUGINS_PATH");
 	if (s)
-		plugins_data_path = s;
+		legacy_plugins_path = s;
 
-	if (!plugins_path.empty() && !plugins_data_path.empty()) {
+	s = getenv("OBS_LEGACY_PLUGINS_DATA_PATH");
+	if (s)
+		legacy_plugins_data_path = s;
+
+	if (!plugins_path.empty()) {
 #if defined(__APPLE__)
 		plugins_path += "/%module%.plugin/Contents/MacOS";
 		plugins_data_path += "/%module%.plugin/Contents/Resources";
 		obs_add_module_path(plugins_path.c_str(), plugins_data_path.c_str());
 #else
-		string data_path_with_module_suffix;
-		data_path_with_module_suffix += plugins_data_path;
-		data_path_with_module_suffix += "/%module%";
-		obs_add_module_path(plugins_path.c_str(), data_path_with_module_suffix.c_str());
+		string plugin_path_with_module_suffix;
+		plugin_path_with_module_suffix += plugins_path;
+		plugin_path_with_module_suffix += "/%module%";
+		obs_add_plugin_module_path(plugins_path.c_str());
 #endif
 	}
 
-	if (portable_mode)
+	if (portable_mode) {
+#if defined(_WIN32)
+		obs_add_plugin_module_path(portable_plugin_module_bin);
+		obs_add_legacy_plugin_module_path(portable_legacy_plugin_module_bin,
+						  portable_legacy_plugin_module_data);
+#endif
 		return;
+	}
 
 	char base_module_dir[512];
 #if defined(_WIN32)
@@ -168,9 +184,12 @@ static void AddExtraModulePaths()
 #endif
 #else
 #if ARCH_BITS == 64
-	obs_add_module_path((path + "/bin/64bit").c_str(), (path + "/data").c_str());
+	// Load new style plugin locations first
+	obs_add_plugin_module_path(path.c_str());
+	obs_add_legacy_plugin_module_path((path + "/bin/64bit").c_str(), (path + "/data").c_str());
 #else
-	obs_add_module_path((path + "/bin/32bit").c_str(), (path + "/data").c_str());
+	obs_add_plugin_module_path(path.c_str());
+	obs_add_legacy_plugin_module_path((path + "/bin/32bit").c_str(), (path + "/data").c_str());
 #endif
 #endif
 }
