@@ -132,9 +132,9 @@ static void AddExtraModulePaths()
 
 	if (!plugins_path.empty()) {
 #if defined(__APPLE__)
+		string plugins_data_path = plugins_path + "/%module%.plugin/Contents/Resources";
 		plugins_path += "/%module%.plugin/Contents/MacOS";
-		plugins_data_path += "/%module%.plugin/Contents/Resources";
-		obs_add_module_path(plugins_path.c_str(), plugins_data_path.c_str());
+		obs_add_module_path_info(plugins_path.c_str(), plugins_data_path.c_str(), PLUGIN);
 #else
 		string plugin_path_with_module_suffix;
 		plugin_path_with_module_suffix += plugins_path;
@@ -167,7 +167,7 @@ static void AddExtraModulePaths()
 	string path = base_module_dir;
 #if defined(__APPLE__)
 	/* User Application Support Search Path */
-	obs_add_module_path((path + "/Contents/MacOS").c_str(), (path + "/Contents/Resources").c_str());
+	obs_add_module_path_info((path + "/Contents/MacOS").c_str(), (path + "/Contents/Resources").c_str(), PLUGIN);
 
 #ifndef __aarch64__
 	/* Legacy System Library Search Path */

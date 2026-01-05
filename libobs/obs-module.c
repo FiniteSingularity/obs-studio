@@ -376,7 +376,7 @@ obs_module_t *obs_get_disabled_module(const char *name)
 
 bool obs_is_legacy_plugin(const char* name)
 {
-	for (int i = 0; i < obs->legacy_plugin_modules.num; i++) {
+	for (size_t i = 0; i < obs->legacy_plugin_modules.num; i++) {
 		if (strcmp(name, obs->legacy_plugin_modules.array[i]) == 0) {
 			return true;
 		}
@@ -621,6 +621,9 @@ static void load_all_callback(void *param, const struct obs_module_info2 *info)
 		obs_add_plugin_module(info->name);
 		break;
 	case LEGACY_PLUGIN:
+		obs_add_legacy_plugin_module(info->name);
+		break;
+	case UNDEFINED:
 		obs_add_legacy_plugin_module(info->name);
 		break;
 	}
