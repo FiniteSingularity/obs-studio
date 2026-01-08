@@ -33,5 +33,6 @@ add_subdirectory(plugins)
 add_subdirectory(test/test-input)
 
 add_subdirectory(frontend)
+set_obs_core_modules()
 
 message_configuration()

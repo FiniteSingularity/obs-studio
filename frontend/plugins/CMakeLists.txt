@@ -1,4 +1,8 @@
 add_subdirectory(aja-output-ui)
+append_core_module(aja-output-ui)
 add_subdirectory(decklink-captions)
+append_core_module(decklink-captions)
 add_subdirectory(decklink-output-ui)
+append_core_module(decklink-output-ui)
 add_subdirectory(frontend-tools)
+append_core_module(frontend-tools)

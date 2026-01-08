@@ -1,3 +1,4 @@
+#include <string.h>
 #include <obs-core-modules.h>
 
 const char *obs_core_modules[] = {
@@ -7,5 +8,10 @@ const char *obs_core_modules[] = {
 const unsigned int obs_core_modules_count = @OBS_CORE_MODULE_COUNT@;
 
 bool obs_is_core_module(const char *name) {
-    return true;
+	for (unsigned int i = 0; i < obs_core_modules_count; i++) {
+		if(strcmp(obs_core_modules[i], name) == 0) {
+			return true;
+		}
+	}
+	return false;
 }

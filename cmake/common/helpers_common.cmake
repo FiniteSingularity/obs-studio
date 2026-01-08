@@ -456,6 +456,12 @@ function(check_uuid uuid_string return_value)
   return(PROPAGATE ${return_value})
 endfunction()
 
+function (append_core_module target)
+    set_property(TARGET libobs APPEND PROPERTY CORE_MODULE_TARGETS ${target})
+    # MODULE GETS ADDED HERE AND IN WINDOWS HELPERS
+    target_enable(${target})
+endfunction()
+
 # add_core_module: Add module subdirectory if host platform is in specified list of supported platforms and architectures
 function(add_core_module target)
   set(options WITH_MESSAGE)
@@ -511,9 +517,7 @@ function(add_core_module target)
   endif()
 
   if(TARGET ${target})
-    set_property(TARGET libobs APPEND PROPERTY CORE_MODULE_TARGETS ${target})
-    # MODULE GETS ADDED HERE AND IN WINDOWS HELPERS
-    target_enable(${target})
+    append_core_module(${target})
   else()
     if(_AOP_WITH_MESSAGE)
       add_custom_target(${target} COMMENT "Dummy target for unavailable module ${target}")

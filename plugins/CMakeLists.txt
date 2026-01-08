@@ -19,6 +19,7 @@ macro(check_obs_browser)
       message(FATAL_ERROR "Required submodule 'obs-browser' not available.")
     else()
       add_subdirectory(obs-browser)
+      append_core_module(obs-browser)
     endif()
   else()
     add_custom_target(obs-browser)
@@ -31,6 +32,7 @@ macro(check_obs_websocket)
     message(FATAL_ERROR "Required submodule 'obs-websocket' not available.")
   else()
     add_subdirectory(obs-websocket)
+    append_core_module(obs-websocket)
   endif()
 endmacro()
 
@@ -93,4 +95,6 @@ add_core_module(win-capture PLATFORMS WINDOWS)
 add_core_module(win-dshow PLATFORMS WINDOWS)
 add_core_module(win-wasapi PLATFORMS WINDOWS)
 
-set_obs_core_modules()
+# NOTE: Moved this to the frontend/plugins CMakeLists.txt file
+#       to ensure the frontend plugins are loaded/setup.
+# set_obs_core_modules()
