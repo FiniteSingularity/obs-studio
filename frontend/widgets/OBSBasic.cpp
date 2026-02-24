@@ -115,12 +115,16 @@ extern void CheckExistingCookieId();
 
 static void AddExtraModulePaths()
 {
-	string plugins_path, legacy_plugins_path, legacy_plugins_data_path;
+	string plugins_path, plugins_data_path, legacy_plugins_path, legacy_plugins_data_path;
 	char *s;
 
 	s = getenv("OBS_PLUGINS_PATH");
 	if (s)
 		plugins_path = s;
+
+	s = getenv("OBS_PLUGINS_DATA_PATH");
+	if (s)
+		plugins_data_path = s;
 
 	s = getenv("OBS_LEGACY_PLUGINS_PATH");
 	if (s)
@@ -132,14 +136,35 @@ static void AddExtraModulePaths()
 
 	if (!plugins_path.empty()) {
 #if defined(__APPLE__)
-		string plugins_data_path = plugins_path + "/%module%.plugin/Contents/Resources";
+		plugins_data_path = plugins_path + "/%module%.plugin/Contents/Resources";
 		plugins_path += "/%module%.plugin/Contents/MacOS";
 		obs_add_module_path_info(plugins_path.c_str(), plugins_data_path.c_str(), PLUGIN);
+#elif defined(_WIN32)
+		plugins_path += "/%module%";
+		obs_add_plugin_module_path(plugin_path.c_str());
 #else
-		string plugin_path_with_module_suffix;
-		plugin_path_with_module_suffix += plugins_path;
-		plugin_path_with_module_suffix += "/%module%";
-		obs_add_plugin_module_path(plugins_path.c_str());
+		if(!plugins_data_path.empty()) {
+			plugins_path += "/%module%";
+			plugins_data_path += "/%module%";
+			obs_add_module_path_info(plugins_path.c_str(), plugins_data_path.c_str(), PLUGIN);
+		} else {
+			blog(LOG_WARNING, "OBS_PLUGINS_DATA_PATH is not set, plugin data files will not be found for plugins in OBS_PLUGINS_PATH");
+		}
+#endif
+	}
+
+	if (!legacy_plugins_path.empty()) {
+#if defined(_WIN32)
+		legacy_plugins_data_path += "/%module%";
+		obs_add_legacy_plugin_module_path(legacy_plugins_path.c_str(), legacy_plugins_data_path.empty() ? nullptr : legacy_plugins_data_path.c_str());
+#elif not defined(__APPLE__)
+		if(!legacy_plugins_data_path.empty()) {
+			legacy_plugins_path += "/%module%";
+			legacy_plugins_data_path += "/%module%";
+			obs_add_module_path_info(legacy_plugins_path.c_str(), legacy_plugins_data_path.c_str(), LEGACY_PLUGIN);
+		} else {
+			blog(LOG_WARNING, "OBS_LEGACY_PLUGINS_DATA_PATH is not set, plugin data files will not be found for plugins in OBS_LEGACY_PLUGINS_PATH");
+		}
 #endif
 	}
 
@@ -160,7 +185,6 @@ static void AddExtraModulePaths()
 #else
 	int ret = GetAppConfigPath(base_module_dir, sizeof(base_module_dir), "obs-studio/plugins/%module%");
 #endif
-
 	if (ret <= 0)
 		return;
 
@@ -182,15 +206,21 @@ static void AddExtraModulePaths()
 	std::string path_user_legacy = user_legacy_module_dir;
 	obs_add_module_path((path_user_legacy + "/bin").c_str(), (path_user_legacy + "/data").c_str());
 #endif
-#else
+#elif defined(_WIN32)
 #if ARCH_BITS == 64
-	// Load new style plugin locations first
 	obs_add_plugin_module_path(path.c_str());
 	obs_add_legacy_plugin_module_path((path + "/bin/64bit").c_str(), (path + "/data").c_str());
 #else
 	obs_add_plugin_module_path(path.c_str());
 	obs_add_legacy_plugin_module_path((path + "/bin/32bit").c_str(), (path + "/data").c_str());
 #endif
+#else
+	char *module_bin_path = os_get_executable_path_ptr("../" OBS_PLUGIN_DESTINATION "/plugins/%module%");
+	char *module_data_path = os_get_executable_path_ptr("../" OBS_DATA_PATH "/obs-modules/plugins/%module%");
+	obs_add_module_path_info(module_bin_path, module_data_path, PLUGIN);
+	// TODO BEFORE PR: Add support for legacy module paths in Linux, similar to MacOS and Windows.
+	bfree(module_bin_path);
+	bfree(module_data_path);
 #endif
 }
 
@@ -209,30 +239,12 @@ static void SetSafeModuleNames()
 	string module;
 	stringstream modules_(SAFE_MODULES);
 
-	//while (getline(modules_, module, '|')) {
-	//	/* When only disallowing third-party plugins, still add
-	//	 * "unsafe" bundled modules to the safe list. */
-	//	if (disable_3p_plugins || !unsafe_modules.count(module))
-	//		obs_add_safe_module(module.c_str());
-	//}
-#endif
-}
-
-static void SetCoreModuleNames()
-{
-#ifndef SAFE_MODULES
-	throw "SAFE_MODULES not defined";
-#else
-	std::string safeModules = SAFE_MODULES;
-	if (safeModules.empty()) {
-		throw "SAFE_MODULES is empty";
+	while (getline(modules_, module, '|')) {
+		/* When only disallowing third-party plugins, still add
+		 * "unsafe" bundled modules to the safe list. */
+		if (disable_3p_plugins || !unsafe_modules.count(module))
+			obs_add_safe_module(module.c_str());
 	}
-	//string module;
-	//stringstream modules_(SAFE_MODULES);
-
-	//while (getline(modules_, module, '|')) {
-	//	obs_add_core_module(module.c_str());
-	//}
 #endif
 }
 
@@ -1044,9 +1056,6 @@ void OBSBasic::OBSInit()
 	} else {
 		AddExtraModulePaths();
 	}
-
-	// Core modules are not allowed to be disabled by the user via plugin manager.
-	SetCoreModuleNames();
 
 	/* Modules can access frontend information (i.e. profile and scene collection data) during their initialization, and some modules (e.g. obs-websockets) are known to use the filesystem location of the current profile in their own code.
 

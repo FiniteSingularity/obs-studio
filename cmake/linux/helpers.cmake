@@ -124,7 +124,7 @@ function(set_target_properties_obs target)
       set(plugin_destination "${OBS_SCRIPT_PLUGIN_DESTINATION}")
       set_property(TARGET ${target} PROPERTY INSTALL_RPATH "$ORIGIN/;$ORIGIN/..")
     else()
-      set(plugin_destination "${OBS_PLUGIN_DESTINATION}")
+      set(plugin_destination "${OBS_PLUGIN_DESTINATION}/core/${target}")
     endif()
 
     install(
@@ -170,20 +170,20 @@ function(set_target_properties_obs target)
           add_custom_command(
             TARGET ${target}
             POST_BUILD
-            COMMAND "${CMAKE_COMMAND}" -E make_directory "${OBS_OUTPUT_DIR}/$<CONFIG>/${OBS_PLUGIN_DESTINATION}/"
+            COMMAND "${CMAKE_COMMAND}" -E make_directory "${OBS_OUTPUT_DIR}/$<CONFIG>/${OBS_PLUGIN_DESTINATION}/core/${target}"
             COMMAND
               "${CMAKE_COMMAND}" -E copy_if_different "${imported_location}" "${cef_location}/chrome-sandbox"
               "${cef_location}/libEGL.so" "${cef_location}/libGLESv2.so" "${cef_location}/libvk_swiftshader.so"
               "${cef_location}/libvulkan.so.1" "${cef_location}/v8_context_snapshot.bin"
-              "${cef_location}/vk_swiftshader_icd.json" "${OBS_OUTPUT_DIR}/$<CONFIG>/${OBS_PLUGIN_DESTINATION}/"
+              "${cef_location}/vk_swiftshader_icd.json" "${OBS_OUTPUT_DIR}/$<CONFIG>/${OBS_PLUGIN_DESTINATION}/core/${target}"
             COMMAND
               "${CMAKE_COMMAND}" -E copy_if_different "${cef_root_location}/Resources/chrome_100_percent.pak"
               "${cef_root_location}/Resources/chrome_200_percent.pak" "${cef_root_location}/Resources/icudtl.dat"
-              "${cef_root_location}/Resources/resources.pak" "${OBS_OUTPUT_DIR}/$<CONFIG>/${OBS_PLUGIN_DESTINATION}/"
+              "${cef_root_location}/Resources/resources.pak" "${OBS_OUTPUT_DIR}/$<CONFIG>/${OBS_PLUGIN_DESTINATION}/core/${target}"
             COMMAND
               "${CMAKE_COMMAND}" -E copy_directory "${cef_root_location}/Resources/locales"
-              "${OBS_OUTPUT_DIR}/$<CONFIG>/${OBS_PLUGIN_DESTINATION}/locales"
-            COMMENT "Add Chromium Embedded Framework to library directory"
+              "${OBS_OUTPUT_DIR}/$<CONFIG>/${OBS_PLUGIN_DESTINATION}/core/${target}/locales"
+            COMMENT "Add Chromium Embedded Framwork to library directory"
           )
 
           install(
@@ -200,13 +200,13 @@ function(set_target_properties_obs target)
               "${cef_root_location}/Resources/chrome_200_percent.pak"
               "${cef_root_location}/Resources/icudtl.dat"
               "${cef_root_location}/Resources/resources.pak"
-            DESTINATION "${OBS_PLUGIN_DESTINATION}"
+            DESTINATION "${OBS_PLUGIN_DESTINATION}/core/${target}"
             COMPONENT Runtime
           )
 
           install(
             DIRECTORY "${cef_root_location}/Resources/locales"
-            DESTINATION "${OBS_PLUGIN_DESTINATION}"
+            DESTINATION "${OBS_PLUGIN_DESTINATION}/core/${target}"
             USE_SOURCE_PERMISSIONS
             COMPONENT Runtime
           )
@@ -238,7 +238,8 @@ function(target_install_resources target)
 
     get_property(obs_module_list GLOBAL PROPERTY OBS_MODULES_ENABLED)
     if(target IN_LIST obs_module_list)
-      set(target_destination "${OBS_DATA_DESTINATION}/obs-plugins/${target}")
+#      set(target_destination "${OBS_DATA_DESTINATION}/obs-plugins/${target}")
+      set(target_destination "${OBS_DATA_DESTINATION}/obs-modules/core/${target}")
     elseif(target STREQUAL obs)
       set(target_destination "${OBS_DATA_DESTINATION}/obs-studio")
     else()
@@ -271,7 +272,8 @@ function(target_add_resource target resource)
   if(ARGN)
     set(target_destination "${ARGN}")
   elseif(${target} IN_LIST obs_module_list)
-    set(target_destination "${OBS_DATA_DESTINATION}/obs-plugins/${target}")
+#    set(target_destination "${OBS_DATA_DESTINATION}/obs-plugins/${target}")
+    set(target_destination "${OBS_DATA_DESTINATION}/obs-modules/core/${target}")
   elseif(target STREQUAL obs)
     set(target_destination "${OBS_DATA_DESTINATION}/obs-studio")
   else()

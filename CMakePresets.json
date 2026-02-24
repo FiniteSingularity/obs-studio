@@ -139,7 +139,11 @@
         "ENABLE_AJA": false,
         "ENABLE_VLC": true,
         "ENABLE_WAYLAND": true,
-        "ENABLE_WEBRTC": false
+        "ENABLE_WEBRTC": false,
+  "ENABLE_BROWSER": false,
+  "ENABLE_RELOCATABLE": true,
+	"ENABLE_PORTABLE_CONFIG": true,
+	"CMAKE_INSTALL_PREFIX": {"type": "STRING", "value": "/home/mark/bin"}
       }
     },
     {

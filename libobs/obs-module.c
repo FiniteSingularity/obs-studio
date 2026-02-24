@@ -426,6 +426,8 @@ char *obs_module_get_config_path(obs_module_t *module, const char *file)
 void obs_add_module_path_info(const char *bin, const char *data, enum obs_module_type module_type) {
 	struct obs_module_path omp;
 
+	blog(LOG_INFO, "Adding module path: bin='%s', data='%s'", bin, data);
+
 	if (!obs || !bin || !data)
 		return;
 

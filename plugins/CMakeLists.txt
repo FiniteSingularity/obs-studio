@@ -62,7 +62,7 @@ add_core_module(mac-videotoolbox PLATFORMS MACOS)
 add_core_module(mac-virtualcam PLATFORMS MACOS)
 add_core_module(nv-filters PLATFORMS WINDOWS)
 
-check_obs_browser()
+# check_obs_browser()
 
 add_core_module(obs-ffmpeg)
 add_core_module(obs-filters)
