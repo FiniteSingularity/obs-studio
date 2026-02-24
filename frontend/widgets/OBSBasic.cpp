@@ -141,7 +141,7 @@ static void AddExtraModulePaths()
 		obs_add_module_path_info(plugins_path.c_str(), plugins_data_path.c_str(), PLUGIN);
 #elif defined(_WIN32)
 		plugins_path += "/%module%";
-		obs_add_plugin_module_path(plugin_path.c_str());
+		obs_add_plugin_module_path(plugins_path.c_str());
 #else
 		if(!plugins_data_path.empty()) {
 			plugins_path += "/%module%";
