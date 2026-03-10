@@ -442,29 +442,6 @@ void obs_add_module_path(const char *bin, const char *data)
 	obs_add_module_path_info(bin, data, LEGACY_PLUGIN);
 }
 
-void obs_add_core_module_path(const char* bin)
-{
-	struct dstr data;
-	dstr_init_copy(&data, bin);
-	dstr_cat(&data, "/data");
-	obs_add_module_path_info(bin, data.array, CORE);
-	dstr_free(&data);
-}
-
-void obs_add_plugin_module_path(const char* bin)
-{
-	struct dstr data;
-	dstr_init_copy(&data, bin);
-	dstr_cat(&data, "/data");
-	obs_add_module_path_info(bin, data.array, PLUGIN);
-	dstr_free(&data);
-}
-
-void obs_add_legacy_plugin_module_path(const char* bin, const char* data)
-{
-	obs_add_module_path_info(bin, data, LEGACY_PLUGIN);
-}
-
 void obs_add_safe_module(const char *name)
 {
 	if (!obs || !name)
@@ -814,7 +791,8 @@ static void process_found_module(struct obs_module_path *omp, const char *path, 
 	dstr_free(&parsed_bin_path);
 }
 
-static void find_modules_in_path(struct obs_module_path *omp, obs_find_module_callback2_t callback, void *param)
+/* removed static to gain access from platform specific implementations */
+void find_modules_in_path(struct obs_module_path *omp, obs_find_module_callback2_t callback, void *param)
 {
 	struct dstr search_path = {0};
 	char *module_start;

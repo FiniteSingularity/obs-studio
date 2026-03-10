@@ -26,6 +26,7 @@
 #include "plugin-manager/PluginManager.hpp"
 
 #include <obs-module.h>
+#include <obs-module-loader.h>
 
 #ifdef YOUTUBE_ENABLED
 #include <docks/YouTubeAppDock.hpp>
@@ -115,113 +116,18 @@ extern void CheckExistingCookieId();
 
 static void AddExtraModulePaths()
 {
-	string plugins_path, plugins_data_path, legacy_plugins_path, legacy_plugins_data_path;
-	char *s;
+	obs_add_additional_plugin_modules();
+	obs_add_additional_legacy_plugin_modules();
 
-	s = getenv("OBS_PLUGINS_PATH");
-	if (s)
-		plugins_path = s;
+	obs_add_plugin_modules(portable_mode);
 
-	s = getenv("OBS_PLUGINS_DATA_PATH");
-	if (s)
-		plugins_data_path = s;
-
-	s = getenv("OBS_LEGACY_PLUGINS_PATH");
-	if (s)
-		legacy_plugins_path = s;
-
-	s = getenv("OBS_LEGACY_PLUGINS_DATA_PATH");
-	if (s)
-		legacy_plugins_data_path = s;
-
-	if (!plugins_path.empty()) {
-#if defined(__APPLE__)
-		plugins_data_path = plugins_path + "/%module%.plugin/Contents/Resources";
-		plugins_path += "/%module%.plugin/Contents/MacOS";
-		obs_add_module_path_info(plugins_path.c_str(), plugins_data_path.c_str(), PLUGIN);
-#elif defined(_WIN32)
-		plugins_path += "/%module%";
-		obs_add_plugin_module_path(plugins_path.c_str());
-#else
-		if(!plugins_data_path.empty()) {
-			plugins_path += "/%module%";
-			plugins_data_path += "/%module%";
-			obs_add_module_path_info(plugins_path.c_str(), plugins_data_path.c_str(), PLUGIN);
-		} else {
-			blog(LOG_WARNING, "OBS_PLUGINS_DATA_PATH is not set, plugin data files will not be found for plugins in OBS_PLUGINS_PATH");
-		}
-#endif
-	}
-
-	if (!legacy_plugins_path.empty()) {
-#if defined(_WIN32)
-		legacy_plugins_data_path += "/%module%";
-		obs_add_legacy_plugin_module_path(legacy_plugins_path.c_str(), legacy_plugins_data_path.empty() ? nullptr : legacy_plugins_data_path.c_str());
-#elif not defined(__APPLE__)
-		if(!legacy_plugins_data_path.empty()) {
-			legacy_plugins_path += "/%module%";
-			legacy_plugins_data_path += "/%module%";
-			obs_add_module_path_info(legacy_plugins_path.c_str(), legacy_plugins_data_path.c_str(), LEGACY_PLUGIN);
-		} else {
-			blog(LOG_WARNING, "OBS_LEGACY_PLUGINS_DATA_PATH is not set, plugin data files will not be found for plugins in OBS_LEGACY_PLUGINS_PATH");
-		}
-#endif
-	}
-
+	/* If windows portable mode, dont load any more plugins */
+#ifdef WIN32
 	if (portable_mode) {
-#if defined(_WIN32)
-		obs_add_plugin_module_path(portable_plugin_module_bin);
-		obs_add_legacy_plugin_module_path(portable_legacy_plugin_module_bin,
-						  portable_legacy_plugin_module_data);
-#endif
 		return;
 	}
-
-	char base_module_dir[512];
-#if defined(_WIN32)
-	int ret = GetProgramDataPath(base_module_dir, sizeof(base_module_dir), "obs-studio/plugins/%module%");
-#elif defined(__APPLE__)
-	int ret = GetAppConfigPath(base_module_dir, sizeof(base_module_dir), "obs-studio/plugins/%module%.plugin");
-#else
-	int ret = GetAppConfigPath(base_module_dir, sizeof(base_module_dir), "obs-studio/plugins/%module%");
 #endif
-	if (ret <= 0)
-		return;
-
-	string path = base_module_dir;
-#if defined(__APPLE__)
-	/* User Application Support Search Path */
-	obs_add_module_path_info((path + "/Contents/MacOS").c_str(), (path + "/Contents/Resources").c_str(), PLUGIN);
-
-#ifndef __aarch64__
-	/* Legacy System Library Search Path */
-	char system_legacy_module_dir[PATH_MAX];
-	GetProgramDataPath(system_legacy_module_dir, sizeof(system_legacy_module_dir), "obs-studio/plugins/%module%");
-	std::string path_system_legacy = system_legacy_module_dir;
-	obs_add_module_path((path_system_legacy + "/bin").c_str(), (path_system_legacy + "/data").c_str());
-
-	/* Legacy User Application Support Search Path */
-	char user_legacy_module_dir[PATH_MAX];
-	GetAppConfigPath(user_legacy_module_dir, sizeof(user_legacy_module_dir), "obs-studio/plugins/%module%");
-	std::string path_user_legacy = user_legacy_module_dir;
-	obs_add_module_path((path_user_legacy + "/bin").c_str(), (path_user_legacy + "/data").c_str());
-#endif
-#elif defined(_WIN32)
-#if ARCH_BITS == 64
-	obs_add_plugin_module_path(path.c_str());
-	obs_add_legacy_plugin_module_path((path + "/bin/64bit").c_str(), (path + "/data").c_str());
-#else
-	obs_add_plugin_module_path(path.c_str());
-	obs_add_legacy_plugin_module_path((path + "/bin/32bit").c_str(), (path + "/data").c_str());
-#endif
-#else
-	char *module_bin_path = os_get_executable_path_ptr("../" OBS_PLUGIN_DESTINATION "/plugins/%module%");
-	char *module_data_path = os_get_executable_path_ptr("../" OBS_DATA_PATH "/obs-modules/plugins/%module%");
-	obs_add_module_path_info(module_bin_path, module_data_path, PLUGIN);
-	// TODO BEFORE PR: Add support for legacy module paths in Linux, similar to MacOS and Windows.
-	bfree(module_bin_path);
-	bfree(module_data_path);
-#endif
+	obs_add_legacy_plugin_modules();
 }
 
 /* First-party modules considered to be potentially unsafe to load in Safe Mode

@@ -38,7 +38,7 @@ static const char* core_module_bin = "../../core/%module%";
 
 void add_default_module_paths(void)
 {
-	obs_add_core_module_path(core_module_bin);
+	//obs_add_core_module_path(core_module_bin);
 	//if (PORTABLE_MODE) {
 	//	obs_add_plugin_module_path(portable_plugin_module_bin);
 	//	obs_add_legacy_plugin_module_path(portable_legacy_plugin_module_bin, portable_legacy_module_data);
