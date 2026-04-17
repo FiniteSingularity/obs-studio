@@ -229,6 +229,7 @@ public:
 
 	void loadAppModules(struct obs_module_failure_info &mfi);
 
+public:
 	// Plugin Manager Accessors
 	void pluginManagerOpenDialog();
 

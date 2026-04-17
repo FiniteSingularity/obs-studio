@@ -157,8 +157,6 @@ function(set_target_properties_obs target)
         endif()
       endif()
     endif()
-
-    set_property(GLOBAL APPEND PROPERTY OBS_MODULES_ENABLED ${target})
   endif()
 
   target_link_options(${target} PRIVATE "/PDBALTPATH:$<TARGET_PDB_FILE_NAME:${target}>")

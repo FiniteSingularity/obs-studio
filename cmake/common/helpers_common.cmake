@@ -456,12 +456,6 @@ function(check_uuid uuid_string return_value)
   return(PROPAGATE ${return_value})
 endfunction()
 
-function (append_core_module target)
-    set_property(TARGET libobs APPEND PROPERTY CORE_MODULE_TARGETS ${target})
-    # MODULE GETS ADDED HERE AND IN WINDOWS HELPERS
-    target_enable(${target})
-endfunction()
-
 # add_core_module: Add module subdirectory if host platform is in specified list of supported platforms and architectures
 function(add_core_module target)
   set(options WITH_MESSAGE)
@@ -517,7 +511,7 @@ function(add_core_module target)
   endif()
 
   if(TARGET ${target})
-    append_core_module(${target})
+    target_enable(${target})
   else()
     if(_AOP_WITH_MESSAGE)
       add_custom_target(${target} COMMENT "Dummy target for unavailable module ${target}")
@@ -531,19 +525,16 @@ function(set_obs_core_modules)
     message(FATAL_ERROR "Unable to set up OBS Core Modules without 'libobs' target")
   endif()
 
-  get_target_property(core_modules_list libobs CORE_MODULE_TARGETS)
+  # get_target_property(core_modules_list libobs CORE_MODULE_TARGETS)
+  get_property(OBS_MODULES_ENABLED GLOBAL PROPERTY OBS_MODULES_ENABLED)
   get_target_property(libobs_source_directory libobs SOURCE_DIR)
   get_target_property(libobs_binary_directory libobs BINARY_DIR)
 
-  list(LENGTH core_modules_list core_modules_count)
-  string(REPLACE ";" "\",\n\t\"" core_modules_array_content "${core_modules_list}")
+  list(LENGTH OBS_MODULES_ENABLED core_modules_count)
+  string(REPLACE ";" "\",\n\t\"" core_modules_array_content "${OBS_MODULES_ENABLED}")
 
   set(OBS_CORE_MODULE_COUNT "${core_modules_count}")
   set(OBS_CORE_MODULE_LIST "\t\"${core_modules_array_content}\"")
-  get_property(OBS_MODULES_ENABLED GLOBAL PROPERTY OBS_MODULES_ENABLED)
-  foreach(feature IN LISTS OBS_MODULES_ENABLED)
-    message(NOTICE " - ${feature}")
-  endforeach()
 
   configure_file(
     "${libobs_source_directory}/obs-core-modules.c.in"

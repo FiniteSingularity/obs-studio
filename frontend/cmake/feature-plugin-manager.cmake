@@ -5,4 +5,6 @@ target_sources(
     plugin-manager/PluginManager.hpp
     plugin-manager/PluginManagerWindow.cpp
     plugin-manager/PluginManagerWindow.hpp
+    $<$<PLATFORM_ID:Windows>:plugin-manager/PluginModuleLoader-win.cpp>
+    plugin-manager/PluginModuleLoader.hpp
 )

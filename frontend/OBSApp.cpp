@@ -1984,14 +1984,7 @@ void OBSApp::addLogLine(int logLevel, const QString &message)
 
 void OBSApp::loadAppModules(struct obs_module_failure_info &mfi)
 {
-	pluginManager_->preLoad();
-	blog(LOG_INFO, "---------------------------------");
-	obs_load_all_modules2(&mfi);
-	blog(LOG_INFO, "---------------------------------");
-	obs_log_loaded_modules();
-	blog(LOG_INFO, "---------------------------------");
-	obs_post_load_modules();
-	pluginManager_->postLoad();
+	pluginManager_->loadAllPlugins(portable_mode, mfi);
 }
 
 void OBSApp::pluginManagerOpenDialog()

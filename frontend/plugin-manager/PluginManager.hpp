@@ -59,6 +59,7 @@ private:
 public:
 	void preLoad();
 	void postLoad();
+	void loadAllPlugins(bool portable_mode, struct obs_module_failure_info &mfi);
 	void open();
 
 	friend void addModuleToPluginManagerImpl(void *param, obs_module_t *newModule);

@@ -1259,6 +1259,7 @@ static bool obs_init(const char *locale, const char *module_config_path, profile
 	obs_register_source(&scene_info);
 	obs_register_source(&group_info);
 	obs_register_source(&audio_line_info);
+	obs->core_modules_loaded = false;
 	obs_add_core_modules();
 	return true;
 }

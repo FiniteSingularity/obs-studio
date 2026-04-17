@@ -17,6 +17,7 @@
 
 #include "PluginManager.hpp"
 #include "PluginManagerWindow.hpp"
+#include "PluginModuleLoader.hpp"
 
 #include <OBSApp.hpp>
 #include <qt-wrappers.hpp>
@@ -79,6 +80,19 @@ void PluginManager::postLoad()
 	saveModules_();
 	// Add provided features from any unloaded modules
 	linkUnloadedModules_();
+}
+
+void PluginManager::loadAllPlugins(bool portable_mode, struct obs_module_failure_info& mfi)
+{
+	preLoad();
+	blog(LOG_INFO, "---------------------------------");
+	loadPlugins(portable_mode, mfi);
+	loadLegacyPlugins(mfi);
+	blog(LOG_INFO, "---------------------------------");
+	obs_log_loaded_modules();
+	blog(LOG_INFO, "---------------------------------");
+	obs_post_load_modules();
+	postLoad();
 }
 
 std::filesystem::path PluginManager::getConfigFilePath_()

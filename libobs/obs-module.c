@@ -22,10 +22,14 @@
 #include "obs-internal.h"
 #include "obs-module.h"
 #include "obs-core-modules.h"
+#include "obs-core-modules-loader.h"
+#include "obs-plugin-modules-loader.h"
 
 extern const char *get_module_extension(void);
 
 obs_module_t *loadingModule = NULL;
+
+void find_modules_in_path(struct obs_module_path *omp, obs_find_module_callback2_t callback, void *param);
 
 static inline int req_func_not_found(const char *name, const char *path)
 {
@@ -649,6 +653,8 @@ void obs_load_all_modules2(struct obs_module_failure_info *mfi)
 	memset(mfi, 0, sizeof(*mfi));
 
 	profile_start(obs_load_all_modules2_name);
+	//obs_load_core_modules(load_all_callback, &fail_info);
+	//obs_load_plugins(load_all_callback, &fail_info);
 	obs_find_modules2(load_all_callback, &fail_info);
 #ifdef _WIN32
 	profile_start(reset_win32_symbol_paths_name);
@@ -657,6 +663,33 @@ void obs_load_all_modules2(struct obs_module_failure_info *mfi)
 #endif
 	profile_end(obs_load_all_modules2_name);
 
+	mfi->count = fail_info.fail_count;
+	mfi->failed_modules = strlist_split(fail_info.fail_modules.array, ';', false);
+	dstr_free(&fail_info.fail_modules);
+}
+
+void obs_load_plugins(struct obs_module_path *omp, struct obs_module_failure_info *mfi)
+{
+	struct fail_info fail_info = {0};
+	memset(mfi, 0, sizeof(*mfi));
+
+	/* if core modules haven't been loaded yet, load them first */
+	if (!obs->core_modules_loaded) {
+		obs_core_modules_load(load_all_callback, &fail_info);
+		if (fail_info.fail_count > 0) {
+			/* if core modules fail to load, early return to tell caller to stop
+			 * loading
+			 */
+			mfi->count = fail_info.fail_count;
+			mfi->failed_modules = strlist_split(fail_info.fail_modules.array, ';', false);
+			mfi->core_module_failure = true;
+			dstr_free(&fail_info.fail_modules);
+			return;
+		}
+		obs->core_modules_loaded = true;
+	}
+
+	find_modules_in_path(omp, load_all_callback, &fail_info);
 	mfi->count = fail_info.fail_count;
 	mfi->failed_modules = strlist_split(fail_info.fail_modules.array, ';', false);
 	dstr_free(&fail_info.fail_modules);

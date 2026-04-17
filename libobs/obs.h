@@ -181,6 +181,12 @@ enum obs_module_type {
 	LEGACY_PLUGIN
 };
 
+struct obs_module_path {
+	char *bin;
+	char *data;
+	enum obs_module_type module_type;
+};
+
 struct obs_transform_info {
 	struct vec2 pos;
 	float rot;
@@ -602,12 +608,15 @@ EXPORT void obs_add_core_module(const char *name);
 EXPORT void obs_load_all_modules(void);
 
 struct obs_module_failure_info {
+	bool core_module_failure;
 	char **failed_modules;
 	size_t count;
 };
 
 EXPORT void obs_module_failure_info_free(struct obs_module_failure_info *mfi);
 EXPORT void obs_load_all_modules2(struct obs_module_failure_info *mfi);
+EXPORT void obs_load_all_modules3(struct obs_module_failure_info *mfi, bool portable_mode);
+EXPORT void obs_load_plugins(struct obs_module_path *omp, struct obs_module_failure_info *mfi);
 
 /** Notifies modules that all modules have been loaded.  This function should
  * be called after all modules have been loaded. */
