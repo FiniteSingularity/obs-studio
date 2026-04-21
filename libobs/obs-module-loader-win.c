@@ -18,7 +18,6 @@
 
 #include "obs-module-loader.h"
 #include "obs-core-modules-loader.h"
-#include "obs-plugin-modules-loader.h"
 
 void obs_add_core_modules() 
 {

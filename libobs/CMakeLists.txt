@@ -66,8 +66,6 @@ target_sources(
     obs-output-delay.c
     obs-output.c
     obs-output.h
-    $<$<PLATFORM_ID:Windows>:obs-plugin-modules-loader-win.c>
-    obs-plugin-modules-loader.h
     obs-properties.c
     obs-properties.h
     obs-scene.c

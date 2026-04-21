@@ -23,7 +23,6 @@
 #include "obs-module.h"
 #include "obs-core-modules.h"
 #include "obs-core-modules-loader.h"
-#include "obs-plugin-modules-loader.h"
 
 extern const char *get_module_extension(void);
 
@@ -622,52 +621,6 @@ load_failure:
 	}
 }
 
-static const char *obs_load_all_modules_name = "obs_load_all_modules";
-#ifdef _WIN32
-static const char *reset_win32_symbol_paths_name = "reset_win32_symbol_paths";
-#endif
-
-void obs_load_all_modules(void)
-{
-	profile_start(obs_load_all_modules_name);
-	obs_find_modules2(load_all_callback, NULL);
-#ifdef _WIN32
-	profile_start(reset_win32_symbol_paths_name);
-	reset_win32_symbol_paths();
-	profile_end(reset_win32_symbol_paths_name);
-#endif
-	profile_end(obs_load_all_modules_name);
-}
-
-static const char *obs_load_all_modules2_name = "obs_load_all_modules2";
-
-void obs_load_all_modules2(struct obs_module_failure_info *mfi)
-{
-	for (size_t index = 0; index < obs_core_modules_count; ++index) {
-		const char *core_module_name = *(obs_core_modules + index);
-
-		blog(LOG_INFO, "Registered core module: %s", core_module_name);
-	}
-
-	struct fail_info fail_info = {0};
-	memset(mfi, 0, sizeof(*mfi));
-
-	profile_start(obs_load_all_modules2_name);
-	//obs_load_core_modules(load_all_callback, &fail_info);
-	//obs_load_plugins(load_all_callback, &fail_info);
-	obs_find_modules2(load_all_callback, &fail_info);
-#ifdef _WIN32
-	profile_start(reset_win32_symbol_paths_name);
-	reset_win32_symbol_paths();
-	profile_end(reset_win32_symbol_paths_name);
-#endif
-	profile_end(obs_load_all_modules2_name);
-
-	mfi->count = fail_info.fail_count;
-	mfi->failed_modules = strlist_split(fail_info.fail_modules.array, ';', false);
-	dstr_free(&fail_info.fail_modules);
-}
-
 void obs_load_plugins(struct obs_module_path *omp, struct obs_module_failure_info *mfi)
 {
 	struct fail_info fail_info = {0};
@@ -857,6 +810,21 @@ void find_modules_in_path(struct obs_module_path *omp, obs_find_module_callback2
 	}
 
 	dstr_free(&search_path);
+}
+
+/* Function to find a specifically defined module. Used for loading core modules by name.
+ * omp->bin should be path to the module binary, without its file extension.
+ * omp->data should be path to the module data directory (including the module name)
+ */
+void find_core_module(struct obs_module_path *omp, obs_find_module_callback2_t callback, void *param) {
+	struct dstr module_path = {0};
+
+	dstr_copy(&module_path, omp->bin);
+	dstr_cat(&module_path, get_module_extension());
+	if (os_file_exists(module_path.array)) {
+		process_found_module(omp, module_path.array, false, callback, param);
+	}
+	dstr_free(&module_path);
 }
 
 void obs_find_modules2(obs_find_module_callback2_t callback, void *param)
