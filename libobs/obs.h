@@ -641,8 +641,9 @@ typedef void (*obs_find_module_callback2_t)(void *param, const struct obs_module
 /** Finds all modules within the search paths added by obs_add_module_path. */
 EXPORT void obs_find_modules2(obs_find_module_callback2_t callback, void *param);
 
-/** Finds a particular core module. */
-void find_core_module(struct obs_module_path *omp, obs_find_module_callback2_t callback, void *param);
+/** Finds and loads a particular core module.
+ *  Returns false if module cant be found. */
+bool find_core_module(struct obs_module_path *omp, obs_find_module_callback2_t callback, void *param);
 
 #endif
 

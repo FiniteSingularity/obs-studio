@@ -647,7 +647,7 @@ void obs_load_plugins(struct obs_module_path *omp, struct obs_module_failure_inf
 	mfi->failed_modules = strlist_split(fail_info.fail_modules.array, ';', false);
 	dstr_free(&fail_info.fail_modules);
 }
-
+ 
 void obs_module_failure_info_free(struct obs_module_failure_info *mfi)
 {
 	if (mfi->failed_modules) {
@@ -747,10 +747,10 @@ static void process_found_module(struct obs_module_path *omp, const char *path, 
 	if (ext)
 		dstr_resize(&name, ext - name.array);
 
-	/* If a module is located with core modules, but is not registered
-	 * as a core module, log the warning and skip loading it. */
-	if (omp->module_type == CORE && !obs_is_core_module(name.array)) {
-		blog(LOG_WARNING, "Module %s is not registered as a core module. Not loading.", name.array);
+	/* If a module is specified as core module,
+	 * log the warning and skip loading it. */
+	if (omp->module_type == CORE) {
+		blog(LOG_WARNING, "Module %s can only be loaded as a core module.", name.array);
 		dstr_free(&name);
 		dstr_free(&parsed_bin_path);
 		return;
@@ -775,6 +775,57 @@ static void process_found_module(struct obs_module_path *omp, const char *path, 
 	bfree(parsed_data_dir);
 	dstr_free(&name);
 	dstr_free(&parsed_bin_path);
+}
+
+
+/* Core modules are handled a bit differently than plugin modules, as they are expected to be directly defined with their binary path instead of
+ * being searched for in a directory. This function handles processing of those core modules once their binary path is determined.
+ */
+static void process_core_module(struct obs_module_path *omp, obs_find_module_callback2_t callback, void *param) {
+	struct dstr module_path = {0};
+	struct dstr name = {0};
+
+	dstr_copy(&module_path, omp->bin);
+	dstr_cat(&module_path, get_module_extension());
+
+	if (!module_path.array) {
+		return; 
+	}
+
+	char *file = strrchr(module_path.array, '/');
+	file = file ? (file + 1) : module_path.array;
+
+	if (strcmp(file, ".") == 0 || strcmp(file, "..") == 0) {
+		dstr_free(&module_path);
+		return;
+	}
+	dstr_copy(&name, file);
+
+	char *ext = strrchr(name.array, '.');
+	dstr_resize(&name, ext - name.array);
+
+	if (omp->module_type != CORE) {
+		dstr_free(&module_path);
+		dstr_free(&name);
+		blog(LOG_WARNING, "Module %s is not a core module, and must be loaded with the plugin loader.", name.array);
+		return;
+	}
+
+	struct obs_module_info2 info;
+	char *parsed_data_dir;
+	parsed_data_dir = make_data_directory(name.array, omp->data);
+
+	if (parsed_data_dir) {
+		info.bin_path = module_path.array;
+		info.data_path = parsed_data_dir;
+		info.name = name.array;
+		info.module_type = CORE;
+		callback(param, &info);
+	}
+	bfree(parsed_data_dir);
+
+	dstr_free(&module_path);
+	dstr_free(&name);
 }
 
 /* removed static to gain access from platform specific implementations */
@@ -816,15 +867,19 @@ void find_modules_in_path(struct obs_module_path *omp, obs_find_module_callback2
  * omp->bin should be path to the module binary, without its file extension.
  * omp->data should be path to the module data directory (including the module name)
  */
-void find_core_module(struct obs_module_path *omp, obs_find_module_callback2_t callback, void *param) {
+bool find_core_module(struct obs_module_path *omp, obs_find_module_callback2_t callback, void *param) {
+	bool found = false;
+
 	struct dstr module_path = {0};
 
 	dstr_copy(&module_path, omp->bin);
 	dstr_cat(&module_path, get_module_extension());
 	if (os_file_exists(module_path.array)) {
-		process_found_module(omp, module_path.array, false, callback, param);
+		process_core_module(omp, callback, param);
+		found = true;
 	}
 	dstr_free(&module_path);
+	return found;
 }
 
 void obs_find_modules2(obs_find_module_callback2_t callback, void *param)
