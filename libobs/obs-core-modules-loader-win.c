@@ -39,6 +39,9 @@ void obs_core_modules_load(obs_find_module_callback2_t callback, void *param)
 		blog(LOG_ERROR, "Failed to load core module %s", name);
 	}
 
+	bfree(omp.bin);
+	bfree(omp.data);
+
 	dstr_free(&bin_path);
 	dstr_free(&data_path);
     }

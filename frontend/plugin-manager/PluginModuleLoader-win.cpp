@@ -69,6 +69,9 @@ void loadPluginModules(bool portableMode, struct obs_module_failure_info &mfi)
 	}
 	obs_load_plugins(&omp, &mfi);
 
+	bfree(omp.bin);
+	bfree(omp.data);
+
 	// TODO: Throw an exception here if mfi indicates core modules not loaded.
 	//       Exception should be caught in plugin manager and trigger a dialog
 	//       indicating core plugin load failure, with button to shut down app.
@@ -92,6 +95,9 @@ void loadAdditionalPluginModules(struct obs_module_failure_info &mfi)
 	omp.data = bstrdup(plugins_data_path.c_str());  
 
 	obs_load_plugins(&omp, &mfi);
+
+	bfree(omp.bin);
+	bfree(omp.data);
 }
 
 void loadLegacyPluginModules(struct obs_module_failure_info &mfi)
@@ -114,6 +120,8 @@ void loadLegacyPluginModules(struct obs_module_failure_info &mfi)
 	omp.data = bstrdup(data_path.c_str());
 
 	obs_load_plugins(&omp, &mfi);
+	bfree(omp.bin);
+	bfree(omp.data);
 
 	// Legacy plugin modules stored locally
 	// This is the same as the location for legacy portable plugins.
@@ -123,6 +131,8 @@ void loadLegacyPluginModules(struct obs_module_failure_info &mfi)
 	omp_local.data = bstrdup(portableLegacyPluginModuleData.c_str());
 
 	obs_load_plugins(&omp_local, &mfi);
+	bfree(omp_local.bin);
+	bfree(omp_local.data);
 }
 
 void loadAdditionalLegacyPluginModules(struct obs_module_failure_info &mfi)
@@ -147,4 +157,6 @@ void loadAdditionalLegacyPluginModules(struct obs_module_failure_info &mfi)
 	omp.data = bstrdup(data.c_str());
 
 	obs_load_plugins(&omp, &mfi);
+	bfree(omp.bin);
+	bfree(omp.data);
 }

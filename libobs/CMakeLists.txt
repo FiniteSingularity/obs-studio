@@ -58,10 +58,6 @@ target_sources(
     obs-missing-files.h
     obs-module.c
     obs-module.h
-    $<$<PLATFORM_ID:Darwin>:obs-module-loader-mac.m>
-    $<$<PLATFORM_ID:Windows>:obs-module-loader-win.c>
-    $<$<PLATFORM_ID:Linux,FreeBSD,OpenBSD>:obs-module-loader-nix.c>
-    obs-module-loader.h
     obs-nal.c
     obs-nal.h
     obs-output-delay.c

@@ -26,7 +26,6 @@
 #include "plugin-manager/PluginManager.hpp"
 
 #include <obs-module.h>
-#include <obs-module-loader.h>
 
 #ifdef YOUTUBE_ENABLED
 #include <docks/YouTubeAppDock.hpp>
@@ -100,12 +99,6 @@ extern void RegisterRestreamAuth();
 extern void RegisterYoutubeAuth();
 #endif
 
-#ifdef _WIN32
-static const char *portable_plugin_module_bin = "../../plugins/%module%";
-static const char *portable_legacy_plugin_module_bin = "../../obs-plugins/64bit";
-static const char *portable_legacy_plugin_module_data = "../../data/obs-plugins/%module%";
-#endif
-
 struct QCef;
 
 extern QCef *cef;
@@ -113,22 +106,6 @@ extern bool cef_js_avail;
 
 extern void DestroyPanelCookieManager();
 extern void CheckExistingCookieId();
-
-static void AddExtraModulePaths()
-{
-	obs_add_additional_plugin_modules();
-	obs_add_additional_legacy_plugin_modules();
-
-	obs_add_plugin_modules(portable_mode);
-
-	/* If windows portable mode, dont load any more plugins */
-#ifdef WIN32
-	if (portable_mode) {
-		return;
-	}
-#endif
-	obs_add_legacy_plugin_modules();
-}
 
 /* First-party modules considered to be potentially unsafe to load in Safe Mode
  * due to them allowing external code (e.g. scripts) to modify OBS's state. */
@@ -959,8 +936,6 @@ void OBSBasic::OBSInit()
 	// Safe Mode disables third-party plugins so we don't need to add each path outside the OBS bundle/installation.
 	if (safe_mode || disable_3p_plugins) {
 		SetSafeModuleNames();
-	} else {
-		AddExtraModulePaths();
 	}
 
 	/* Modules can access frontend information (i.e. profile and scene collection data) during their initialization, and some modules (e.g. obs-websockets) are known to use the filesystem location of the current profile in their own code.
