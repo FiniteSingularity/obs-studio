@@ -6,5 +6,6 @@ target_sources(
     plugin-manager/PluginManagerWindow.cpp
     plugin-manager/PluginManagerWindow.hpp
     $<$<PLATFORM_ID:Windows>:plugin-manager/PluginModuleLoader-win.cpp>
+    $<$<PLATFORM_ID:Darwin>:plugin-manager/PluginModuleLoader-mac.mm>
     plugin-manager/PluginModuleLoader.hpp
 )

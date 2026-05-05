@@ -802,7 +802,9 @@ static void process_core_module(struct obs_module_path *omp, obs_find_module_cal
 	dstr_copy(&name, file);
 
 	char *ext = strrchr(name.array, '.');
-	dstr_resize(&name, ext - name.array);
+	if(ext) {
+		dstr_resize(&name, ext - name.array);
+	}
 
 	if (omp->module_type != CORE) {
 		dstr_free(&module_path);

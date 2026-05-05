@@ -18,28 +18,33 @@
 #include <stdlib.h>
 #include "obs.h"
 #include "obs-module-loader.h"
+#include "util/dstr.h"
+#include "util/platform.h"
+
+#include <Carbon/Carbon.h>
+
 
 void obs_add_core_modules() 
 {
-    NSURL *pluginURL = [[NSBundle mainBundle] builtInPlugInsURL];
-    NSString *pluginModulePath = [[pluginURL path] stringByAppendingString:@"/%module%.plugin/Contents/MacOS/"];
-    NSString *pluginDataPath = [[pluginURL path] stringByAppendingString:@"/%module%.plugin/Contents/Resources/"];
+	NSURL *pluginURL = [[NSBundle mainBundle] builtInPlugInsURL];
+	NSString *pluginModulePath = [[pluginURL path] stringByAppendingString:@"/%module%.plugin/Contents/MacOS/"];
+	NSString *pluginDataPath = [[pluginURL path] stringByAppendingString:@"/%module%.plugin/Contents/Resources/"];
 
-    obs_add_module_path_info(pluginModulePath.UTF8String, pluginDataPath.UTF8String, CORE);
+	obs_add_module_path_info(pluginModulePath.UTF8String, pluginDataPath.UTF8String, CORE);
 }
 
 void obs_add_plugin_modules(bool portable_mode)
 {
-    UNUSED_PARAMETER(portable_mode);
-    // Is there a better way to grab the base module directory path on MacOS using obj-c?
-    char module_path[PATH_MAX];
-    int ret = os_get_config_path(module_path, sizeof(module_path), "obs-studio/plugins/%module%.plugin");
-    if(ret <= 0) {
-        blog(LOG_ERROR, "Failed to get module path");
-        return;
-    }
+	UNUSED_PARAMETER(portable_mode);
+	// Is there a better way to grab the base module directory path on MacOS using obj-c?
+	char module_path[PATH_MAX];
+	int ret = os_get_config_path(module_path, sizeof(module_path), "obs-studio/plugins/%module%.plugin");
+	if(ret <= 0) {
+		blog(LOG_ERROR, "Failed to get module path");
+		return;
+	}
 
-    struct dstr bin_path;
+	struct dstr bin_path;
 	dstr_init_copy(&bin_path, module_path);
 	dstr_cat(&bin_path, "/Contents/MacOS");
 
@@ -48,15 +53,15 @@ void obs_add_plugin_modules(bool portable_mode)
 	dstr_cat(&data_path, "/Contents/Resources");
 
 
-    obs_add_module_path_info(bin_path.array, data_path.array, PLUGIN);
+	obs_add_module_path_info(bin_path.array, data_path.array, PLUGIN);
 
-    dstr_free(&bin_path);
+	dstr_free(&bin_path);
 	dstr_free(&data_path);
 }
 
 void obs_add_additional_plugin_modules()
 {
-    char *path = os_get_env("OBS_PLUGINS_PATH");
+    char *path = getenv("OBS_PLUGINS_PATH");
     if (!path) {
         return;
     }
@@ -126,8 +131,8 @@ void obs_add_legacy_plugin_modules()
 
 void obs_add_additional_legacy_plugin_modules()
 {
-    char *bin_path = os_get_env("OBS_LEGACY_PLUGINS_PATH");
-    char *data_path = os_get_env("OBS_LEGACY_PLUGINS_DATA_PATH");
+    char *bin_path = getenv("OBS_LEGACY_PLUGINS_PATH");
+    char *data_path = getenv("OBS_LEGACY_PLUGINS_DATA_PATH");
     
     if (!bin_path || !data_path) {
         return;
@@ -141,7 +146,7 @@ void obs_add_additional_legacy_plugin_modules()
     dstr_init_copy(&data, data_path);
     dstr_cat(&data, "/%module%/data");
 
-    obs_add_module_path_info(bin.array, data.array, LEGACY);
+    obs_add_module_path_info(bin.array, data.array, LEGACY_PLUGIN);
 
     dstr_free(&bin);
     dstr_free(&data);

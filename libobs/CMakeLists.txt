@@ -38,6 +38,7 @@ target_sources(
     obs-avc.h
     obs-canvas.c
     obs-config.h
+    $<$<PLATFORM_ID:Darwin>:obs-core-modules-loader-mac.m>
     $<$<PLATFORM_ID:Windows>:obs-core-modules-loader-win.c>
     obs-core-modules-loader.h
     obs-data.c
