@@ -612,6 +612,9 @@ struct obs_module_failure_info {
 
 EXPORT void obs_module_failure_info_free(struct obs_module_failure_info *mfi);
 
+/** Loads all registered core modules. */
+EXPORT void obs_load_core_modules(struct obs_module_failure_info *mfi);
+
 /** Loads plugins at a given path. omp defines if modern or legacy plugins at path */
 EXPORT void obs_load_plugins(struct obs_module_path *omp, struct obs_module_failure_info *mfi);
 
@@ -643,7 +646,8 @@ EXPORT void obs_find_modules2(obs_find_module_callback2_t callback, void *param)
 
 /** Finds and loads a particular core module.
  *  Returns false if module cant be found. */
-bool find_core_module(struct obs_module_path *omp, obs_find_module_callback2_t callback, void *param);
+bool find_core_module(struct obs_module_path *omp, obs_find_module_callback2_t callback,
+		      struct obs_module_failure_info *mfi);
 
 #endif
 

@@ -2,4 +2,4 @@
 
 #include <obs-internal.h>
 
-extern void obs_core_modules_load(obs_find_module_callback2_t callback, void *param);
+extern void load_core_modules(obs_find_module_callback2_t callback, struct obs_module_failure_info *mfi);

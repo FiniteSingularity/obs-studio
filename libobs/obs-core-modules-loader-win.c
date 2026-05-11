@@ -8,12 +8,14 @@
 const char *core_module_bin = "../../core/%module%/%module%";
 const char *core_module_data = "../../core/%module%/data";
 
-extern bool find_core_module(struct obs_module_path *omp, obs_find_module_callback2_t callback, void *param);
+extern bool find_core_module(struct obs_module_path *omp, obs_find_module_callback2_t callback,
+			     struct obs_module_failure_info *mfi);
 
-void obs_core_modules_load(obs_find_module_callback2_t callback, void *param)
+void load_core_modules(obs_find_module_callback2_t callback, struct obs_module_failure_info *mfi)
 {
     char *core_bin_path = os_get_abs_path_ptr(core_module_bin);
     char *core_data_path = os_get_abs_path_ptr(core_module_data);
+    mfi->core_module_failure = false;
 
     for (unsigned int i = 0; i < obs_core_modules_count; i++) {
 	const char *name = obs_core_modules[i];
@@ -35,8 +37,9 @@ void obs_core_modules_load(obs_find_module_callback2_t callback, void *param)
 	omp.data = bstrdup(data_path.array);
 	omp.module_type = CORE;
 
-	if (!find_core_module(&omp, callback, param)) {
-		blog(LOG_ERROR, "Failed to load core module %s", name);
+	if (!find_core_module(&omp, callback, mfi)) {
+	    blog(LOG_ERROR, "Failed to load core module %s", name);
+	    return;
 	}
 
 	bfree(omp.bin);

@@ -621,26 +621,18 @@ load_failure:
 	}
 }
 
+void obs_load_core_modules(struct obs_module_failure_info *mfi)
+{
+	if (obs->core_modules_loaded)
+		return;
+
+	load_core_modules(load_all_callback, mfi);
+}
+
 void obs_load_plugins(struct obs_module_path *omp, struct obs_module_failure_info *mfi)
 {
 	struct fail_info fail_info = {0};
 	memset(mfi, 0, sizeof(*mfi));
-
-	/* if core modules haven't been loaded yet, load them first */
-	if (!obs->core_modules_loaded) {
-		obs_core_modules_load(load_all_callback, &fail_info);
-		if (fail_info.fail_count > 0) {
-			/* if core modules fail to load, early return to tell caller to stop
-			 * loading
-			 */
-			mfi->count = fail_info.fail_count;
-			mfi->failed_modules = strlist_split(fail_info.fail_modules.array, ';', false);
-			mfi->core_module_failure = true;
-			dstr_free(&fail_info.fail_modules);
-			return;
-		}
-		obs->core_modules_loaded = true;
-	}
 
 	find_modules_in_path(omp, load_all_callback, &fail_info);
 	mfi->count = fail_info.fail_count;
@@ -869,7 +861,9 @@ void find_modules_in_path(struct obs_module_path *omp, obs_find_module_callback2
  * omp->bin should be path to the module binary, without its file extension.
  * omp->data should be path to the module data directory (including the module name)
  */
-bool find_core_module(struct obs_module_path *omp, obs_find_module_callback2_t callback, void *param) {
+bool find_core_module(struct obs_module_path *omp, obs_find_module_callback2_t callback,
+		      struct obs_module_failure_info *mfi)
+{
 	bool found = false;
 
 	struct dstr module_path = {0};
@@ -877,8 +871,10 @@ bool find_core_module(struct obs_module_path *omp, obs_find_module_callback2_t c
 	dstr_copy(&module_path, omp->bin);
 	dstr_cat(&module_path, get_module_extension());
 	if (os_file_exists(module_path.array)) {
-		process_core_module(omp, callback, param);
+		process_core_module(omp, callback, mfi);
 		found = true;
+	} else {
+		mfi->core_module_failure = true;
 	}
 	dstr_free(&module_path);
 	return found;

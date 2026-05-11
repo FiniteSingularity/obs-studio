@@ -9,7 +9,7 @@
 
 extern void find_modules_in_path(struct obs_module_path *omp, obs_find_module_callback2_t callback, void *param);
 
-void obs_core_modules_load(obs_find_module_callback2_t callback, void *param)
+void load_core_modules(obs_find_module_callback2_t callback, struct obs_module_failure_info *mfi)
 {
 	NSURL *pluginURL = [[NSBundle mainBundle] builtInPlugInsURL];
 	NSString *pluginBasePath = [pluginURL path];

@@ -10,7 +10,7 @@ const char *core_module_data = "../" OBS_DATA_PATH "/obs-modules/core/%module%";
 
 extern bool find_core_module(struct obs_module_path *omp, obs_find_module_callback2_t callback, void *param);
 
-void obs_core_modules_load(obs_find_module_callback2_t callback, void *param)
+void load_core_modules(obs_find_module_callback2_t callback, struct obs_module_failure_info *mfi)
 {
 	char *core_bin_path = os_get_executable_path_ptr(core_module_bin);
 	char *core_data_path = os_get_executable_path_ptr(core_module_data);

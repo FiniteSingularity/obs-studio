@@ -85,6 +85,12 @@ void PluginManager::postLoad()
 void PluginManager::loadAllPlugins(bool portable_mode, struct obs_module_failure_info& mfi)
 {
 	preLoad();
+	obs_load_core_modules(&mfi);
+	if (mfi.core_module_failure) {
+		throw "Failed to load core OBS modules. OBS cannot run without these modules. Please try reinstalling OBS.";
+		return;
+	}
+
 	blog(LOG_INFO, "---------------------------------");
 	loadPlugins(portable_mode, mfi);
 	loadLegacyPlugins(mfi);
