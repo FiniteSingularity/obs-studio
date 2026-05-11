@@ -626,6 +626,7 @@ void obs_load_core_modules(struct obs_module_failure_info *mfi)
 	if (obs->core_modules_loaded)
 		return;
 
+	mfi->core_module_failure = false;
 	load_core_modules(load_all_callback, mfi);
 }
 

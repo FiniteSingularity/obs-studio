@@ -7,7 +7,8 @@
 #include <obs.h>
 #include <obs-internal.h>
 
-extern void find_modules_in_path(struct obs_module_path *omp, obs_find_module_callback2_t callback, void *param);
+extern bool find_core_module(struct obs_module_path *omp, obs_find_module_callback2_t callback,
+			     			 struct obs_module_failure_info *mfi);
 
 void load_core_modules(obs_find_module_callback2_t callback, struct obs_module_failure_info *mfi)
 {
@@ -26,7 +27,8 @@ void load_core_modules(obs_find_module_callback2_t callback, struct obs_module_f
 
 		if (![[NSFileManager defaultManager] fileExistsAtPath:binPath]) {
 			blog(LOG_ERROR, "Core Module %s required but missing!", name);
-			continue;
+			mfi->core_module_failure = true;
+			return;
 		}
 
 		struct obs_module_path omp;
@@ -34,8 +36,9 @@ void load_core_modules(obs_find_module_callback2_t callback, struct obs_module_f
 		omp.data = bstrdup([dataPath UTF8String]);
 		omp.module_type = CORE;
 
-		if (!find_core_module(&omp, callback, param)) {
+		if (!find_core_module(&omp, callback, mfi)) {
 			blog(LOG_ERROR, "Failed to load core module %s", name);
+			return;
 		}
 
 		bfree(omp.bin);

@@ -8,7 +8,7 @@
 const char *core_module_bin = "../" OBS_PLUGIN_PATH "/%module%/%module%";
 const char *core_module_data = "../" OBS_DATA_PATH "/obs-modules/core/%module%";
 
-extern bool find_core_module(struct obs_module_path *omp, obs_find_module_callback2_t callback, void *param);
+extern bool find_core_module(struct obs_module_path *omp, obs_find_module_callback2_t callback, struct obs_module_failure_info *mfi);
 
 void load_core_modules(obs_find_module_callback2_t callback, struct obs_module_failure_info *mfi)
 {
@@ -30,8 +30,9 @@ void load_core_modules(obs_find_module_callback2_t callback, struct obs_module_f
 		omp.data = bstrdup(data_path.array);
 		omp.module_type = CORE;
 
-		if (!find_core_module(&omp, callback, param)) {
+		if (!find_core_module(&omp, callback, mfi)) {
 			blog(LOG_ERROR, "Failed to load core module %s", name);
+			return;
 		}
 
 		bfree(omp.bin);
@@ -43,24 +44,4 @@ void load_core_modules(obs_find_module_callback2_t callback, struct obs_module_f
 
 	bfree(core_bin_path);
 	bfree(core_data_path);
-
-	// if (module_bin_path && module_data_path) {
-	// 	char *abs_module_bin_path = os_get_abs_path_ptr(module_bin_path);
-	// 	char *abs_module_install_path = os_get_abs_path_ptr(OBS_INSTALL_PREFIX "/" OBS_PLUGIN_DESTINATION "/core");
-	// 	if (abs_module_bin_path &&
-	// 	    (!abs_module_install_path || strcmp(abs_module_bin_path, abs_module_install_path) != 0)) {
-	// 		char *module_bin_path_full = os_get_executable_path_ptr("../" OBS_PLUGIN_PATH "/%module%");
-	// 		obs_add_module_path_info(module_bin_path_full, module_data_path, CORE);
-	// 		bfree(module_bin_path_full);
-	// 	}
-	// 	bfree(abs_module_install_path);
-	// 	bfree(abs_module_bin_path);
-	// }
-
-	// bfree(module_bin_path);
-	// bfree(module_data_path);
-
-	// for (int i = 0; i < module_patterns_size; i++) {
-	// 	obs_add_module_path_info(module_bin[i], module_data[i], CORE);
-	// }
 }

@@ -15,7 +15,6 @@ void load_core_modules(obs_find_module_callback2_t callback, struct obs_module_f
 {
     char *core_bin_path = os_get_abs_path_ptr(core_module_bin);
     char *core_data_path = os_get_abs_path_ptr(core_module_data);
-    mfi->core_module_failure = false;
 
     for (unsigned int i = 0; i < obs_core_modules_count; i++) {
 	const char *name = obs_core_modules[i];
