@@ -40,6 +40,7 @@ target_sources(
     obs-config.h
     $<$<PLATFORM_ID:Darwin>:obs-core-modules-loader-mac.m>
     $<$<PLATFORM_ID:Windows>:obs-core-modules-loader-win.c>
+    $<$<PLATFORM_ID:Linux,FreeBSD,OpenBSD>:obs-core-modules-loader-nix.c>
     obs-core-modules-loader.h
     obs-data.c
     obs-data.h
