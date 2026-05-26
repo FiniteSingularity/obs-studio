@@ -40,7 +40,7 @@ void addModuleToPluginManagerImpl(void *param, obs_module_t *newModule)
 	std::string moduleName = obs_get_module_file_name(newModule);
 	moduleName = moduleName.substr(0, moduleName.rfind("."));
 
-	if (!obs_get_module_allow_disable(moduleName.c_str()))
+	if (!obs_is_core_module(newModule))
 		return;
 
 	const char *display_name = obs_get_module_name(newModule);
@@ -67,7 +67,7 @@ constexpr std::string_view OBSPluginManagerModulesFile = "modules.json";
 
 void PluginManager::preLoad()
 {
-	loadModules_();
+	loadModuleConfiguration_();
 	disableModules_();
 }
 
@@ -82,18 +82,18 @@ void PluginManager::postLoad()
 	linkUnloadedModules_();
 }
 
-void PluginManager::loadAllPlugins(bool portable_mode, struct obs_module_failure_info& mfi)
+void PluginManager::loadAllPlugins(bool portable_mode)
 {
 	preLoad();
-	obs_load_core_modules(&mfi);
-	if (mfi.core_module_failure) {
+	obs_load_core_modules(&mfi_);
+	if (mfi_.core_module_failure) {
 		throw "Failed to load core OBS modules. OBS cannot run without these modules. Please try reinstalling OBS.";
 		return;
 	}
 
 	blog(LOG_INFO, "---------------------------------");
-	loadPlugins(portable_mode, mfi);
-	loadLegacyPlugins(mfi);
+	loadPlugins(portable_mode, mfi_);
+	loadLegacyPlugins(mfi_);
 	blog(LOG_INFO, "---------------------------------");
 	obs_log_loaded_modules();
 	blog(LOG_INFO, "---------------------------------");
@@ -109,7 +109,7 @@ std::filesystem::path PluginManager::getConfigFilePath_()
 	return path;
 }
 
-void PluginManager::loadModules_()
+void PluginManager::loadModuleConfiguration_()
 {
 	auto modulesFile = getConfigFilePath_();
 	if (std::filesystem::exists(modulesFile)) {

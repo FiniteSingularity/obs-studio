@@ -155,14 +155,6 @@ struct obs_disabled_module {
 
 extern void free_module(struct obs_module *mod);
 
-static inline void free_module_path(struct obs_module_path *omp)
-{
-	if (omp) {
-		bfree(omp->bin);
-		bfree(omp->data);
-	}
-}
-
 struct obs_module_metadata {
 	char *display_name;
 	char *version;

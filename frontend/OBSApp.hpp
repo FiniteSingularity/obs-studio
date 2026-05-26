@@ -227,7 +227,7 @@ public:
 	static void sigQuitSignalHandler(int);
 #endif
 
-	void loadAppModules(struct obs_module_failure_info &mfi);
+	void loadAppModules();
 
 public:
 	// Plugin Manager Accessors

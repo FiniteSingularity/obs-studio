@@ -32,17 +32,14 @@ void load_core_modules(obs_find_module_callback2_t callback, struct obs_module_f
 
 	struct obs_module_path omp;
 
-	omp.bin = bstrdup(bin_path.array);
-	omp.data = bstrdup(data_path.array);
+	omp.bin = bin_path.array;
+	omp.data = data_path.array;
 	omp.module_type = CORE;
 
 	if (!find_core_module(&omp, callback, mfi)) {
 	    blog(LOG_ERROR, "Failed to load core module %s", name);
 	    return;
 	}
-
-	bfree(omp.bin);
-	bfree(omp.data);
 
 	dstr_free(&bin_path);
 	dstr_free(&data_path);

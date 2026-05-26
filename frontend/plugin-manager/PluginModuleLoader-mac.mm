@@ -44,13 +44,10 @@ void loadPluginModules(bool portableMode, struct obs_module_failure_info &mfi)
 
 	struct obs_module_path omp;
 	omp.module_type = PLUGIN;
-	omp.bin = bstrdup(binPath.c_str());
-	omp.data = bstrdup(dataPath.c_str());
+	omp.bin = binPath.c_str();
+	omp.data = dataPath.c_str();
 	
 	obs_load_plugins(&omp, &mfi);
-	
-	bfree(omp.bin);
-	bfree(omp.data);
 	
 	// TODO: Throw an exception here if mfi indicates core modules not loaded.
 	//       Exception should be caught in plugin manager and trigger a dialog
@@ -72,13 +69,10 @@ void loadAdditionalPluginModules(struct obs_module_failure_info &mfi)
 
 	struct obs_module_path omp;
 	omp.module_type = PLUGIN;
-	omp.bin = bstrdup(bin.c_str());
-	omp.data = bstrdup(data.c_str());
+	omp.bin = bin.c_str();
+	omp.data = data.c_str();
 	
 	obs_load_plugins(&omp, &mfi);
-	
-	bfree(omp.bin);
-	bfree(omp.data);
 }
 
 void loadLegacyPluginModules(struct obs_module_failure_info &mfi)
@@ -100,13 +94,10 @@ void loadLegacyPluginModules(struct obs_module_failure_info &mfi)
 
 	struct obs_module_path ompSystem;
 	ompSystem.module_type = LEGACY_PLUGIN;
-	ompSystem.bin = bstrdup(systemBinPath.c_str());
-	ompSystem.data = bstrdup(systemDataPath.c_str());
+	ompSystem.bin = systemBinPath.c_str();
+	ompSystem.data = systemDataPath.c_str();
 	
 	obs_load_plugins(&ompSystem, &mfi);
-	
-	bfree(ompSystem.bin);
-	bfree(ompSystem.data);
 
 	/* Legacy User Application Support Search Path */
 	char user_legacy_module_dir[PATH_MAX];
@@ -124,13 +115,10 @@ void loadLegacyPluginModules(struct obs_module_failure_info &mfi)
 
 	struct obs_module_path ompUser;
 	ompUser.module_type = LEGACY_PLUGIN;
-	ompUser.bin = bstrdup(userBinPath.c_str());
-	ompUser.data = bstrdup(userDataPath.c_str());
+	ompUser.bin = userBinPath.c_str();
+	ompUser.data = userDataPath.c_str();
 	
 	obs_load_plugins(&ompUser, &mfi);
-	
-	bfree(ompUser.bin);
-	bfree(ompUser.data);
 #else
 	UNUSED_PARAMETER(mfi);
 #endif
@@ -153,11 +141,8 @@ void loadAdditionalLegacyPluginModules(struct obs_module_failure_info &mfi)
 
 	struct obs_module_path omp;
 	omp.module_type = PLUGIN;
-	omp.bin = bstrdup(bin.c_str());
-	omp.data = bstrdup(data.c_str());
+	omp.bin = bin.c_str();
+	omp.data = data.c_str();
 	
 	obs_load_plugins(&omp, &mfi);
-	
-	bfree(omp.bin);
-	bfree(omp.data);
 }

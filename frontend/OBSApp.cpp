@@ -1982,9 +1982,9 @@ void OBSApp::addLogLine(int logLevel, const QString &message)
 	emit logLineAdded(logLevel, message);
 }
 
-void OBSApp::loadAppModules(struct obs_module_failure_info &mfi)
+void OBSApp::loadAppModules()
 {
-	pluginManager_->loadAllPlugins(portable_mode, mfi);
+	pluginManager_->loadAllPlugins(portable_mode);
 }
 
 void OBSApp::pluginManagerOpenDialog()

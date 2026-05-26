@@ -50,7 +50,8 @@ private:
 	std::vector<std::string> disabledServices_ = {};
 	std::vector<std::string> disabledEncoders_ = {};
 	std::filesystem::path getConfigFilePath_();
-	void loadModules_();
+	struct obs_module_failure_info mfi_;
+	void loadModuleConfiguration_();
 	void saveModules_();
 	void disableModules_();
 	void addModuleTypes_();
@@ -59,7 +60,7 @@ private:
 public:
 	void preLoad();
 	void postLoad();
-	void loadAllPlugins(bool portable_mode, struct obs_module_failure_info &mfi);
+	void loadAllPlugins(bool portable_mode);
 	void open();
 
 	friend void addModuleToPluginManagerImpl(void *param, obs_module_t *newModule);

@@ -42,14 +42,12 @@ void loadPluginModules(bool portableMode, struct obs_module_failure_info &mfi)
 
 	struct obs_module_path ompBase;
 	ompBase.module_type = PLUGIN;
-    ompBase.bin = bstrdup(module_bin_path);
-    ompBase.data = bstrdup(module_data_path);
+    ompBase.bin = module_bin_path;
+    ompBase.data = module_data_path;
     obs_load_plugins(&ompBase, &mfi);
 
 	bfree(module_bin_path);
 	bfree(module_data_path);
-    bfree(ompBase.bin);
-	bfree(ompBase.data);
 
     /* Flatpak plugins */
     char *flatpak_module_bin_path = os_get_executable_path_ptr(FLATPAK_PLUGIN_PATH "/" OBS_PLUGIN_DESTINATION "/plugins/%module%");
@@ -57,14 +55,12 @@ void loadPluginModules(bool portableMode, struct obs_module_failure_info &mfi)
 
 	struct obs_module_path ompFlatPak;
 	ompFlatPak.module_type = PLUGIN;
-    ompFlatPak.bin = bstrdup(flatpak_module_bin_path);
-    ompFlatPak.data = bstrdup(flatpak_module_data_path);
+    ompFlatPak.bin = flatpak_module_bin_path;
+    ompFlatPak.data = flatpak_module_data_path;
     obs_load_plugins(&ompFlatPak, &mfi);
 
     bfree(flatpak_module_bin_path);
     bfree(flatpak_module_data_path);
-    bfree(ompFlatPak.bin);
-	bfree(ompFlatPak.data);
 
 	// TODO: Throw an exception here if mfi indicates core modules not loaded.
 	//       Exception should be caught in plugin manager and trigger a dialog
@@ -89,13 +85,10 @@ void loadAdditionalPluginModules(struct obs_module_failure_info &mfi)
 
 	struct obs_module_path omp;
 	omp.module_type = PLUGIN;
-	omp.bin = bstrdup(pluginPath.c_str());
-	omp.data = bstrdup(pluginDataPath.c_str());  
+	omp.bin = pluginPath.c_str();
+	omp.data = pluginDataPath.c_str();  
 
 	obs_load_plugins(&omp, &mfi);
-
-	bfree(omp.bin);
-	bfree(omp.data);
 }
 
 void loadLegacyPluginModules(struct obs_module_failure_info &mfi)
@@ -103,11 +96,9 @@ void loadLegacyPluginModules(struct obs_module_failure_info &mfi)
     for (size_t i = 0; i < moduleBin.size(); ++i) {
         struct obs_module_path omp;
         omp.module_type = LEGACY_PLUGIN;
-        omp.bin = bstrdup(moduleBin[i].c_str());
-        omp.data = bstrdup(moduleData[i].c_str());
+        omp.bin = moduleBin[i].c_str();
+        omp.data = moduleData[i].c_str();
 
         obs_load_plugins(&omp, &mfi);
-        bfree(omp.bin);
-        bfree(omp.data);
 	}
 }

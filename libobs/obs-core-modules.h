@@ -5,4 +5,4 @@
 extern const char *obs_core_modules[];
 extern const unsigned int obs_core_modules_count;
 
-extern bool obs_is_core_module(const char *name);
+extern bool obs_in_core_module_list(const char *name);

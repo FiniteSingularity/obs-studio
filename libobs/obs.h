@@ -182,8 +182,8 @@ enum obs_module_type {
 };
 
 struct obs_module_path {
-	char *bin;
-	char *data;
+	const char *bin;
+	const char *data;
 	enum obs_module_type module_type;
 };
 
@@ -518,6 +518,9 @@ EXPORT obs_module_t *obs_get_module(const char *name);
 
 /** Returns a module if it is disabled, or NULL if not found in the disabled list */
 EXPORT obs_module_t *obs_get_disabled_module(const char *name);
+
+/** Returns true if a module is a core module. */
+EXPORT bool obs_is_core_module(obs_module_t *module);
 
 /** Returns true if a module is in legacy format. */
 EXPORT bool obs_is_legacy_plugin(const char *name);

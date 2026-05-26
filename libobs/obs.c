@@ -1438,9 +1438,6 @@ void obs_shutdown(void)
 	obs->procs = NULL;
 	obs->signals = NULL;
 
-	for (size_t i = 0; i < obs->module_paths.num; i++) {
-		free_module_path(obs->module_paths.array + i);
-	}
 	da_free(obs->module_paths);
 
 	for (size_t i = 0; i < obs->safe_modules.num; i++) {

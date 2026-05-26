@@ -931,7 +931,6 @@ void OBSBasic::OBSInit()
 #if defined(_WIN32) && !defined(_DEBUG)
 	LoadLibraryW(L"Qt6Network");
 #endif
-	struct obs_module_failure_info mfi;
 
 	// Safe Mode disables third-party plugins so we don't need to add each path outside the OBS bundle/installation.
 	if (safe_mode || disable_3p_plugins) {
@@ -944,9 +943,7 @@ void OBSBasic::OBSInit()
      */
 	RefreshSceneCollections(true);
 
-	App()->loadAppModules(mfi);
-
-	BPtr<char *> failed_modules = mfi.failed_modules;
+	App()->loadAppModules();
 
 #ifdef BROWSER_AVAILABLE
 	cef = obs_browser_init_panel();
@@ -1252,23 +1249,6 @@ void OBSBasic::OBSInit()
 
 	if (!hideWindowOnStart)
 		activateWindow();
-
-	/* ------------------------------------------- */
-	/* display warning message for failed modules  */
-
-	if (mfi.count) {
-		QString failed_plugins;
-
-		char **plugin = mfi.failed_modules;
-		while (*plugin) {
-			failed_plugins += *plugin;
-			failed_plugins += "\n";
-			plugin++;
-		}
-
-		QString failed_msg = QTStr("PluginsFailedToLoad.Text").arg(failed_plugins);
-		OBSMessageBox::warning(this, QTStr("PluginsFailedToLoad.Title"), failed_msg);
-	}
 }
 
 void OBSBasic::OnFirstLoad()
