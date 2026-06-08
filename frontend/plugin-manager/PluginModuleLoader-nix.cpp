@@ -3,13 +3,14 @@
 
 #include "obs.h"
 #include <util/platform.h>
+#include <util/dstr.h>
 #include "PluginModuleLoader.hpp"
 
 #define FLATPAK_PLUGIN_PATH "/app/plugins"
 
-void loadPluginModules(bool portableMode, struct obs_module_failure_info &mfi);
-void loadAdditionalPluginModules(struct obs_module_failure_info &mfi);
-void loadLegacyPluginModules(struct obs_module_failure_info &mfi);
+std::vector<std::string> loadPluginModules();
+std::vector<std::string> loadAdditionalPluginModules();
+std::vector<std::string> loadLegacyPluginModules();
 
 static const std::vector<std::string> moduleBin = {
     "../../obs-plugins/64bit",
@@ -23,20 +24,29 @@ static const std::vector<std::string> moduleData = {
 	FLATPAK_PLUGIN_PATH "/share/obs/obs-plugins/%module%"
 };
 
-void loadPlugins(bool portableMode, struct obs_module_failure_info& mfi)
-{
-    loadPluginModules(portableMode, mfi);
-    loadAdditionalPluginModules(mfi);
-}
-
-void loadLegacyPlugins(struct obs_module_failure_info& mfi)
-{
-    loadLegacyPluginModules(mfi);
-}
-
-void loadPluginModules(bool portableMode, struct obs_module_failure_info &mfi)
+std::vector<std::string> loadPlugins(bool portableMode)
 {
     UNUSED_PARAMETER(portableMode);
+    auto failedModules = loadPluginModules();
+	auto failedAdditionalModules = loadAdditionalPluginModules();
+
+	failedModules.reserve(failedModules.size() + failedAdditionalModules.size());
+	failedModules.insert(failedModules.end(), failedAdditionalModules.begin(), failedAdditionalModules.end());
+
+	return failedModules;
+}
+
+std::vector<std::string> loadLegacyPlugins(bool portableMode)
+{
+    UNUSED_PARAMETER(portableMode);
+	auto failedModules = loadLegacyPluginModules();
+
+    return failedModules;
+}
+
+std::vector<std::string> loadPluginModules()
+{ 
+ 	std::vector<std::string> failedPlugins{};
     char *module_bin_path = os_get_executable_path_ptr("../" OBS_PLUGIN_DESTINATION "/plugins/%module%");
 	char *module_data_path = os_get_executable_path_ptr("../" OBS_DATA_PATH "/obs-modules/plugins/%module%");
 
@@ -44,6 +54,10 @@ void loadPluginModules(bool portableMode, struct obs_module_failure_info &mfi)
 	ompBase.module_type = PLUGIN;
     ompBase.bin = module_bin_path;
     ompBase.data = module_data_path;
+
+	struct obs_module_failure_info mfi;
+	obs_module_failure_info_init(&mfi);
+
     obs_load_plugins(&ompBase, &mfi);
 
 	bfree(module_bin_path);
@@ -62,14 +76,19 @@ void loadPluginModules(bool portableMode, struct obs_module_failure_info &mfi)
     bfree(flatpak_module_bin_path);
     bfree(flatpak_module_data_path);
 
-	// TODO: Throw an exception here if mfi indicates core modules not loaded.
-	//       Exception should be caught in plugin manager and trigger a dialog
-	//       indicating core plugin load failure, with button to shut down app.
+    for (size_t i = 0; i < mfi.count; ++i) {
+		const char *failedPluginName = mfi.failed_modules.array[i].array;
+		failedPlugins.emplace_back(failedPluginName);
+	}
+
+	obs_module_failure_info_free(&mfi);
+
+    return failedPlugins;
 }
 
-void loadAdditionalPluginModules(struct obs_module_failure_info &mfi)
+std::vector<std::string> loadAdditionalPluginModules()
 {
-	
+	std::vector<std::string> failedPlugins{};
     char *pluginPathEnv = getenv("OBS_PLUGINS_PATH");
     char *pluginDataPathEnv = getenv("OBS_PLUGINS_DATA_PATH");
 
@@ -77,7 +96,7 @@ void loadAdditionalPluginModules(struct obs_module_failure_info &mfi)
 	std::string pluginDataPath = pluginDataPathEnv ? pluginDataPathEnv : "";
 
     if (pluginPath.empty() || pluginDataPath.empty()) {
-        return;
+        return failedPlugins;
     }
 
     pluginPath += "/%module%";
@@ -86,13 +105,30 @@ void loadAdditionalPluginModules(struct obs_module_failure_info &mfi)
 	struct obs_module_path omp;
 	omp.module_type = PLUGIN;
 	omp.bin = pluginPath.c_str();
-	omp.data = pluginDataPath.c_str();  
+	omp.data = pluginDataPath.c_str();
+
+    struct obs_module_failure_info mfi;
+	obs_module_failure_info_init(&mfi);
 
 	obs_load_plugins(&omp, &mfi);
+
+	for (size_t i = 0; i < mfi.count; ++i) {
+		const char *failedPluginName = mfi.failed_modules.array[i].array;
+		failedPlugins.emplace_back(failedPluginName);
+	}
+
+	obs_module_failure_info_free(&mfi);
+
+    return failedPlugins;
 }
 
-void loadLegacyPluginModules(struct obs_module_failure_info &mfi)
+std::vector<std::string> loadLegacyPluginModules()
 {
+    std::vector<std::string> failedPlugins{};
+
+    struct obs_module_failure_info mfi;
+	obs_module_failure_info_init(&mfi);
+
     for (size_t i = 0; i < moduleBin.size(); ++i) {
         struct obs_module_path omp;
         omp.module_type = LEGACY_PLUGIN;
@@ -101,4 +137,13 @@ void loadLegacyPluginModules(struct obs_module_failure_info &mfi)
 
         obs_load_plugins(&omp, &mfi);
 	}
+
+    for (size_t i = 0; i < mfi.count; ++i) {
+        const char *failedPluginName = mfi.failed_modules.array[i].array;
+        failedPlugins.emplace_back(failedPluginName);
+    }
+
+    obs_module_failure_info_free(&mfi);
+
+    return failedPlugins;
 }
