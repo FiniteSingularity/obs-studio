@@ -537,6 +537,7 @@ struct obs_core {
 	DARRAY(struct obs_module_path) module_paths;
 	DARRAY(char *) safe_modules;
 	DARRAY(char *) disabled_modules;
+	DARRAY(char *) failed_modules;
 	DARRAY(char *) core_modules;
 	DARRAY(char *) plugin_modules;
 	DARRAY(char *) legacy_plugin_modules;

@@ -17,5 +17,8 @@
 
 #pragma once
 
-void loadPlugins(bool portableMode, struct obs_module_failure_info &mfi);
-void loadLegacyPlugins(struct obs_module_failure_info &mfi);
+#include <string>
+#include <vector>
+
+std::vector<std::string> loadPlugins(bool portableMode);
+std::vector<std::string> loadLegacyPlugins(bool portableMode);

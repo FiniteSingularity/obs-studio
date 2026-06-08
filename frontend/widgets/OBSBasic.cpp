@@ -1249,6 +1249,8 @@ void OBSBasic::OBSInit()
 
 	if (!hideWindowOnStart)
 		activateWindow();
+
+	App()->handlePluginLoadState();
 }
 
 void OBSBasic::OnFirstLoad()

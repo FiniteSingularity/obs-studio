@@ -173,13 +173,7 @@ enum obs_module_load_state {
 	OBS_MODULE_FAILED_TO_INITIALIZE,
 };
 
-
-enum obs_module_type {
-	UNDEFINED,
-	CORE,
-	PLUGIN,
-	LEGACY_PLUGIN
-};
+enum obs_module_type { UNDEFINED, CORE, PLUGIN, LEGACY_PLUGIN };
 
 struct obs_module_path {
 	const char *bin;
@@ -608,15 +602,16 @@ EXPORT void obs_add_safe_module(const char *name);
 EXPORT void obs_add_core_module(const char *name);
 
 struct obs_module_failure_info {
-	bool core_module_failure;
-	char **failed_modules;
+	DARRAY(struct dstr) failed_modules;
 	size_t count;
 };
+
+EXPORT void obs_module_failure_info_init(struct obs_module_failure_info *mfi);
 
 EXPORT void obs_module_failure_info_free(struct obs_module_failure_info *mfi);
 
 /** Loads all registered core modules. */
-EXPORT void obs_load_core_modules(struct obs_module_failure_info *mfi);
+EXPORT bool obs_load_core_modules();
 
 /** Loads plugins at a given path. omp defines if modern or legacy plugins at path */
 EXPORT void obs_load_plugins(struct obs_module_path *omp, struct obs_module_failure_info *mfi);

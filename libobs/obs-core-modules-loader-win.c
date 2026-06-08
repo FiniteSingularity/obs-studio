@@ -37,6 +37,7 @@ void load_core_modules(obs_find_module_callback2_t callback, struct obs_module_f
 	omp.module_type = CORE;
 
 	if (!find_core_module(&omp, callback, mfi)) {
+	    mfi->count = 1;
 	    blog(LOG_ERROR, "Failed to load core module %s", name);
 	    return;
 	}

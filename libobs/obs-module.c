@@ -17,6 +17,7 @@
 
 #include "util/platform.h"
 #include "util/dstr.h"
+#include "util/darray.h"
 
 #include "obs-defs.h"
 #include "obs-internal.h"
@@ -186,7 +187,7 @@ int obs_open_module(obs_module_t **module, const char *path, const char *data_pa
 
 	// Check if mod_name already exists return MODULE_DUPLICATE error code
 	// if it does.
-	obs_module_t* existing = obs_get_module(mod.mod_name);
+	obs_module_t *existing = obs_get_module(mod.mod_name);
 	if (existing) {
 		blog(LOG_WARNING, "Module at '%s'was previously loaded.", path);
 		return MODULE_DUPLICATE;
@@ -384,7 +385,7 @@ bool obs_is_core_module(obs_module_t *module)
 	return module->module_type == CORE;
 }
 
-bool obs_is_legacy_plugin(const char* name)
+bool obs_is_legacy_plugin(const char *name)
 {
 	for (size_t i = 0; i < obs->legacy_plugin_modules.num; i++) {
 		if (strcmp(name, obs->legacy_plugin_modules.array[i]) == 0) {
@@ -433,7 +434,8 @@ char *obs_module_get_config_path(obs_module_t *module, const char *file)
 	return output.array;
 }
 
-void obs_add_module_path_info(const char *bin, const char *data, enum obs_module_type module_type) {
+void obs_add_module_path_info(const char *bin, const char *data, enum obs_module_type module_type)
+{
 	struct obs_module_path omp;
 
 	blog(LOG_INFO, "Adding module path: bin='%s', data='%s'", bin, data);
@@ -470,7 +472,7 @@ void obs_add_core_module(const char *name)
 	da_push_back(obs->core_modules, &item);
 }
 
-void obs_add_plugin_module(const char* name)
+void obs_add_plugin_module(const char *name)
 {
 	if (!obs || !name)
 		return;
@@ -547,7 +549,7 @@ bool obs_get_module_allow_disable(const char *name)
 
 static void load_all_callback(void *param, const struct obs_module_info2 *info)
 {
-	struct fail_info *fail_info = param;
+	struct obs_module_failure_info *fail_info = param;
 	obs_module_t *module;
 	obs_module_t *disabled_module;
 
@@ -597,9 +599,17 @@ static void load_all_callback(void *param, const struct obs_module_info2 *info)
 	}
 
 	if (!obs_init_module(module)) {
+		bool core = info->module_type == CORE;
 		free_module(module);
 		obs_create_disabled_module(&disabled_module, info->bin_path, info->data_path,
 					   OBS_MODULE_FAILED_TO_INITIALIZE);
+
+		// We dont want to trigger failure for core modules, if the module init runs
+		// but returns false, which means user may not have all dependencies, i.e.
+		// no Nvidia SDK, no decklink drivers, etc..
+		if (!core) {
+			goto load_failure;
+		}
 	}
 
 	switch (info->module_type) {
@@ -622,38 +632,53 @@ static void load_all_callback(void *param, const struct obs_module_info2 *info)
 
 load_failure:
 	if (fail_info) {
-		dstr_cat(&fail_info->fail_modules, info->name);
-		dstr_cat(&fail_info->fail_modules, ";");
-		fail_info->fail_count++;
+		//dstr_cat(&fail_info->fail_modules, info->name);
+		//dstr_cat(&fail_info->fail_modules, ";");
+		struct dstr failed_module;
+		dstr_init_copy(&failed_module, info->name);
+		da_push_back(fail_info->failed_modules, &failed_module);
+		fail_info->count++;
 	}
 }
 
-void obs_load_core_modules(struct obs_module_failure_info *mfi)
+bool obs_load_core_modules()
 {
 	if (obs->core_modules_loaded)
-		return;
+		return true;
 
-	mfi->core_module_failure = false;
-	load_core_modules(load_all_callback, mfi);
+	struct obs_module_failure_info mfi;
+	obs_module_failure_info_init(&mfi);
+
+	load_core_modules(load_all_callback, &mfi);
+
+	bool has_core_module_failure = mfi.count > 0;
+	return !has_core_module_failure;
 }
 
 void obs_load_plugins(struct obs_module_path *omp, struct obs_module_failure_info *mfi)
 {
-	struct fail_info fail_info = {0};
-	memset(mfi, 0, sizeof(*mfi));
+	//struct fail_info fail_info = {0};
+	//memset(mfi, 0, sizeof(*mfi));
 
-	find_modules_in_path(omp, load_all_callback, &fail_info);
-	mfi->count = fail_info.fail_count;
-	mfi->failed_modules = strlist_split(fail_info.fail_modules.array, ';', false);
-	dstr_free(&fail_info.fail_modules);
+	find_modules_in_path(omp, load_all_callback, mfi);
+	//mfi->count = fail_info.fail_count;
+	//mfi->failed_modules = strlist_split(fail_info.fail_modules.array, ';', false);
+	//dstr_free(&fail_info.fail_modules);
 }
- 
+
+void obs_module_failure_info_init(struct obs_module_failure_info* mfi)
+{
+	da_init(mfi->failed_modules);
+	mfi->count = 0;
+}
+
 void obs_module_failure_info_free(struct obs_module_failure_info *mfi)
 {
-	if (mfi->failed_modules) {
-		bfree(mfi->failed_modules);
-		mfi->failed_modules = NULL;
+	for (size_t i = 0; i < mfi->failed_modules.num; i++) {
+		dstr_free(&mfi->failed_modules.array[i]);
 	}
+	da_free(mfi->failed_modules);
+	mfi->count = 0;
 }
 
 void obs_post_load_modules(void)
@@ -781,7 +806,8 @@ static void process_found_module(struct obs_module_path *omp, const char *path, 
 /* Core modules are handled a bit differently than plugin modules, as they are expected to be directly defined with their binary path instead of
  * being searched for in a directory. This function handles processing of those core modules once their binary path is determined.
  */
-static void process_core_module(const char *module_path, const char *data_path, const char *name, obs_find_module_callback2_t callback, void *param) {
+static void process_core_module(const char *module_path, const char *data_path, const char *name, obs_find_module_callback2_t callback, void *param)
+{
 	struct obs_module_info2 info;
 	info.bin_path = module_path;
 	info.data_path = data_path;
@@ -790,7 +816,6 @@ static void process_core_module(const char *module_path, const char *data_path, 
 	callback(param, &info);
 }
 
-/* removed static to gain access from platform specific implementations */
 void find_modules_in_path(struct obs_module_path *omp, obs_find_module_callback2_t callback, void *param)
 {
 	struct dstr search_path = {0};
@@ -855,8 +880,6 @@ bool find_core_module(struct obs_module_path *omp, obs_find_module_callback2_t c
 	if (os_file_exists(module_path.array)) {
 		process_core_module(module_path.array, parsed_data_dir, name, callback, mfi);
 		found = true;
-	} else {
-		mfi->core_module_failure = true;
 	}
 
 	bfree(parsed_data_dir);

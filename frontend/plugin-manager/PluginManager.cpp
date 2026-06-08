@@ -85,20 +85,45 @@ void PluginManager::postLoad()
 void PluginManager::loadAllPlugins(bool portable_mode)
 {
 	preLoad();
-	obs_load_core_modules(&mfi_);
-	if (mfi_.core_module_failure) {
+	bool coreModuleLoadSuccess = obs_load_core_modules();
+
+	if (!coreModuleLoadSuccess) {
+		loadState_ = State::Failure;
+		//TODO: Replace with structured exception type - https://github.com/obsproject/obs-studio/issues/13394
 		throw "Failed to load core OBS modules. OBS cannot run without these modules. Please try reinstalling OBS.";
 		return;
 	}
 
 	blog(LOG_INFO, "---------------------------------");
-	loadPlugins(portable_mode, mfi_);
-	loadLegacyPlugins(mfi_);
+	std::vector<std::string> failedPlugins = loadPlugins(portable_mode);
+	
+	if (failedPlugins.size() > 0) {
+		
+		// Handle error, keep around, extend with contents from loadLegacyPlugins, then assign to "failedModules_"
+		failedModules_ = failedPlugins;
+	}
+
+	std::vector<std::string> failedLegacyPlugins = loadLegacyPlugins(portable_mode);
+
+	if (failedLegacyPlugins.size() > 0) {
+		loadState_ = State::PartialFailure;
+
+		failedModules_.reserve(failedModules_.size() + failedLegacyPlugins.size());
+		failedModules_.insert(failedModules_.end(), failedLegacyPlugins.begin(), failedLegacyPlugins.end());
+	}
+
+	loadState_ = failedModules_.size() == 0 ? State::Success : State::PartialFailure;
+
 	blog(LOG_INFO, "---------------------------------");
 	obs_log_loaded_modules();
 	blog(LOG_INFO, "---------------------------------");
 	obs_post_load_modules();
 	postLoad();
+}
+
+PluginManager::State PluginManager::loadState()
+{
+	return loadState_;
 }
 
 std::filesystem::path PluginManager::getConfigFilePath_()
@@ -301,7 +326,12 @@ void PluginManager::disableModules_()
 void PluginManager::open()
 {
 	auto main = OBSBasic::Get();
-	PluginManagerWindow pluginManagerWindow(modules_, main);
+	PluginManagerWindow pluginManagerWindow(modules_, failedModules_, main);
+
+	if (loadState_ == State::PartialFailure) {
+		pluginManagerWindow.setPage(PluginManagerWindow::Page::Failure);
+	}
+
 	auto result = pluginManagerWindow.exec();
 	if (result == QDialog::Accepted) {
 		modules_ = pluginManagerWindow.result();

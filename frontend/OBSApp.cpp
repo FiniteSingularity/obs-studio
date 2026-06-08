@@ -88,6 +88,35 @@ typedef struct UncleanLaunchAction {
 	bool sendCrashReport = false;
 } UncleanLaunchAction;
 
+enum class PluginFailureAction { Continue, OpenPluginManager };
+
+PluginFailureAction handlePluginFailure()
+{
+	QMessageBox pluginWarning;
+
+	pluginWarning.setIcon(QMessageBox::Warning);
+
+	pluginWarning.setWindowTitle(QTStr("PluginFailure.Dialog.Title"));
+	pluginWarning.setText(QTStr("PluginFailure.Labels.Text"));
+
+	QPushButton *continueButton =
+		pluginWarning.addButton(QTStr("PluginFailure.Dialog.Continue"), QMessageBox::RejectRole);
+	QPushButton *handleButton =
+		pluginWarning.addButton(QTStr("PluginFailure.Dialog.Open"), QMessageBox::AcceptRole);
+
+	pluginWarning.setDefaultButton(continueButton);
+
+	pluginWarning.exec();
+
+	bool openPluginManager = pluginWarning.clickedButton() == handleButton;
+
+	if (openPluginManager) {
+		return PluginFailureAction::OpenPluginManager;
+	} else {
+		return PluginFailureAction::Continue;
+	}
+}
+
 UncleanLaunchAction handleUncleanShutdown(bool enableCrashUpload)
 {
 	UncleanLaunchAction launchAction;
@@ -1985,6 +2014,20 @@ void OBSApp::addLogLine(int logLevel, const QString &message)
 void OBSApp::loadAppModules()
 {
 	pluginManager_->loadAllPlugins(portable_mode);
+}
+
+void OBSApp::handlePluginLoadState()
+{
+	using PluginState = OBS::PluginManager::State;
+	PluginState loadState = pluginManager_->loadState();
+
+	if (loadState != PluginState::Success) {
+		PluginFailureAction action = handlePluginFailure();
+
+		if (action == PluginFailureAction::OpenPluginManager) {
+			pluginManagerOpenDialog();
+		}
+	}
 }
 
 void OBSApp::pluginManagerOpenDialog()

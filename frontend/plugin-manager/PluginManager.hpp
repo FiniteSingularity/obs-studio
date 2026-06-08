@@ -43,14 +43,19 @@ struct ModuleInfo {
 };
 
 class PluginManager {
+public:
+	enum class State { Failure, PartialFailure, Success };
+
 private:
+	State loadState_{State::Failure};
+
 	std::vector<ModuleInfo> modules_ = {};
+	std::vector<std::string> failedModules_{};
 	std::vector<std::string> disabledSources_ = {};
 	std::vector<std::string> disabledOutputs_ = {};
 	std::vector<std::string> disabledServices_ = {};
 	std::vector<std::string> disabledEncoders_ = {};
 	std::filesystem::path getConfigFilePath_();
-	struct obs_module_failure_info mfi_;
 	void loadModuleConfiguration_();
 	void saveModules_();
 	void disableModules_();
@@ -62,6 +67,8 @@ public:
 	void postLoad();
 	void loadAllPlugins(bool portable_mode);
 	void open();
+
+	PluginManager::State loadState();
 
 	friend void addModuleToPluginManagerImpl(void *param, obs_module_t *newModule);
 };

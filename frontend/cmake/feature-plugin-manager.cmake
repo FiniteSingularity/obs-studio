@@ -5,8 +5,25 @@ target_sources(
     plugin-manager/PluginManager.hpp
     plugin-manager/PluginManagerWindow.cpp
     plugin-manager/PluginManagerWindow.hpp
-    $<$<PLATFORM_ID:Windows>:plugin-manager/PluginModuleLoader-win.cpp>
-    $<$<PLATFORM_ID:Darwin>:plugin-manager/PluginModuleLoader-mac.mm>
-    $<$<PLATFORM_ID:Linux,FreeBSD,OpenBSD>:plugin-manager/PluginModuleLoader-nix.cpp>
     plugin-manager/PluginModuleLoader.hpp
 )
+
+if(OS_WINDOWS)
+  target_sources(
+    obs-studio
+    PRIVATE
+      plugin-manager/PluginModuleLoader-win.cpp
+  )
+elseif(OS_MACOS)
+  target_sources(
+    obs-studio
+    PRIVATE
+      plugin-manager/PluginModuleLoader-mac.mm
+  )
+else()
+  target_sources(
+    obs-studio
+    PRIVATE
+      plugin-manager/PluginModuleLoader-nix.cpp
+  )
+endif()

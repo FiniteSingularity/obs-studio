@@ -33,7 +33,9 @@ extern bool safe_mode;
 
 namespace OBS {
 
-PluginManagerWindow::PluginManagerWindow(std::vector<ModuleInfo> const &modules, QWidget *parent)
+PluginManagerWindow::PluginManagerWindow(std::vector<ModuleInfo> const &modules,
+	                                std::vector<std::string> const &failedModules, QWidget *parent)
+
 	: QDialog(parent),
 	  modules_(modules),
 	  ui(new Ui::PluginManagerWindow)
@@ -60,6 +62,9 @@ PluginManagerWindow::PluginManagerWindow(std::vector<ModuleInfo> const &modules,
 
 	QListWidgetItem *installed = new QListWidgetItem(QTStr("PluginManager.Section.Manage"));
 	ui->sectionList->addItem(installed);
+
+	QListWidgetItem *failed = new QListWidgetItem("Failed");
+	ui->sectionList->addItem(failed);
 
 	QListWidgetItem *updates = new QListWidgetItem(QTStr("PluginManager.Section.Updates"));
 	updates->setFlags(updates->flags() & ~Qt::ItemIsEnabled);
@@ -121,6 +126,19 @@ PluginManagerWindow::PluginManagerWindow(std::vector<ModuleInfo> const &modules,
 		row++;
 	}
 
+	QLabel *item = new QLabel("FAILED ITEMS");
+	item->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Fixed);
+	ui->modulesList->layout()->addWidget(item);
+
+	for (std::string const &moduleName : failedModules) {
+		QString name = QString::fromStdString(moduleName);
+
+		QLabel *item = new QLabel(name);
+		item->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Fixed);
+		item->setProperty("class", "text-muted");
+		ui->modulesList->layout()->addWidget(item);
+	}
+
 	QVBoxLayout *layout = qobject_cast<QVBoxLayout *>(ui->modulesList->layout());
 	if (safe_mode) {
 		QLabel *safeModeLabel = new QLabel(ui->modulesList);
@@ -178,6 +196,20 @@ bool PluginManagerWindow::isEnabledPluginsChanged()
 	}
 
 	return result;
+}
+
+void PluginManagerWindow::setPage(Page page)
+{
+	switch (page) {
+	case Page::Installed:
+		ui->sectionList->setCurrentRow(1);
+		break;
+	case Page::Failure:
+		ui->sectionList->setCurrentRow(2);
+		break;
+	default:
+		break;
+	}
 }
 
 }; // namespace OBS

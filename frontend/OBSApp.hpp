@@ -232,6 +232,7 @@ public:
 public:
 	// Plugin Manager Accessors
 	void pluginManagerOpenDialog();
+	void handlePluginLoadState();
 
 public slots:
 	void Exec(VoidFunc func);
