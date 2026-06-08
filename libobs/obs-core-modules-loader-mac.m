@@ -27,7 +27,7 @@ void load_core_modules(obs_find_module_callback2_t callback, struct obs_module_f
 
 		if (![[NSFileManager defaultManager] fileExistsAtPath:binPath]) {
 			blog(LOG_ERROR, "Core Module %s required but missing!", name);
-			mfi->core_module_failure = true;
+			mfi->count = 1;
 			return;
 		}
 
@@ -38,6 +38,7 @@ void load_core_modules(obs_find_module_callback2_t callback, struct obs_module_f
 
 		if (!find_core_module(&omp, callback, mfi)) {
 			blog(LOG_ERROR, "Failed to load core module %s", name);
+			mfi->count = 1;
 			return;
 		}
 	}

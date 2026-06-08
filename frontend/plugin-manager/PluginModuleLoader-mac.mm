@@ -1,39 +1,48 @@
-#include <string>
+#include "PluginModuleLoader.hpp"
 
 #include "obs.h"
 #include "util/platform.h"
+#include "util/dstr.h"
 
-#include "PluginModuleLoader.hpp"
+#include <string>
+#include <vector>
 
-void loadPluginModules(bool portableMode, struct obs_module_failure_info &mfi);
-void loadAdditionalPluginModules(struct obs_module_failure_info &mfi);
-void loadLegacyPluginModules(struct obs_module_failure_info &mfi);
-void loadAdditionalLegacyPluginModules(struct obs_module_failure_info &mfi);
+std::vector<std::string> loadPluginModules();
+std::vector<std::string> loadAdditionalPluginModules();
+std::vector<std::string> loadLegacyPluginModules();
+std::vector<std::string> loadAdditionalLegacyPluginModules();
 
-void loadPlugins(bool portableMode, struct obs_module_failure_info& mfi)
-{
-	loadPluginModules(portableMode, mfi);
-	loadAdditionalPluginModules(mfi);
-}
-
-void loadLegacyPlugins(struct obs_module_failure_info& mfi)
-{
-	loadLegacyPluginModules(mfi);
-	loadAdditionalLegacyPluginModules(mfi);
-}
-
-void loadPluginModules(bool portableMode, struct obs_module_failure_info &mfi)
+std::vector<std::string> loadPlugins(bool portableMode)
 {
 	UNUSED_PARAMETER(portableMode);
-	
-	
-	
-	// Is there a better way to grab the base module directory path on MacOS using obj-c?
+	auto failedModules = loadPluginModules();
+	auto failedAdditionalModules = loadAdditionalPluginModules();
+
+	failedModules.reserve(failedModules.size() + failedAdditionalModules.size());
+	failedModules.insert(failedModules.end(), failedAdditionalModules.begin(), failedAdditionalModules.end());
+
+	return failedModules;
+}
+
+std::vector<std::string> loadLegacyPlugins(bool portableMode)
+{
+	UNUSED_PARAMETER(portableMode);
+	auto failedModules = loadLegacyPluginModules();
+	auto failedAdditionalModules = loadAdditionalLegacyPluginModules();
+
+	failedModules.reserve(failedModules.size() + failedAdditionalModules.size());
+	failedModules.insert(failedModules.end(), failedAdditionalModules.begin(), failedAdditionalModules.end());
+
+	return failedModules;
+}
+
+std::vector<std::string> loadPluginModules()
+{
 	char module_path[PATH_MAX];
 	int ret = os_get_config_path(module_path, sizeof(module_path), "obs-studio/plugins/%module%.plugin");
 	if(ret <= 0) {
 		blog(LOG_ERROR, "Failed to get module path");
-		return;
+		throw;
 	}
 
 	std::string binPath = module_path;
@@ -46,19 +55,29 @@ void loadPluginModules(bool portableMode, struct obs_module_failure_info &mfi)
 	omp.module_type = PLUGIN;
 	omp.bin = binPath.c_str();
 	omp.data = dataPath.c_str();
+
+	struct obs_module_failure_info mfi;
+	obs_module_failure_info_init(&mfi);
 	
 	obs_load_plugins(&omp, &mfi);
-	
-	// TODO: Throw an exception here if mfi indicates core modules not loaded.
-	//       Exception should be caught in plugin manager and trigger a dialog
-	//       indicating core plugin load failure, with button to shut down app.
+
+	std::vector<std::string> failedPlugins{};
+
+	for (size_t i = 0; i < mfi.count; ++i) {
+		const char *failedPluginName = mfi.failed_modules.array[i].array;
+		failedPlugins.emplace_back(failedPluginName);
+	}
+
+	obs_module_failure_info_free(&mfi);
+
+	return failedPlugins;
 }
 
-void loadAdditionalPluginModules(struct obs_module_failure_info &mfi)
+std::vector<std::string> loadAdditionalPluginModules()
 {
 	char *path = getenv("OBS_PLUGINS_PATH");
 	if (!path) {
-		return;
+		return {};
 	}
 	
 	std::string bin = path;
@@ -71,66 +90,88 @@ void loadAdditionalPluginModules(struct obs_module_failure_info &mfi)
 	omp.module_type = PLUGIN;
 	omp.bin = bin.c_str();
 	omp.data = data.c_str();
+
+	struct obs_module_failure_info mfi;
+	obs_module_failure_info_init(&mfi);
 	
 	obs_load_plugins(&omp, &mfi);
-}
 
-void loadLegacyPluginModules(struct obs_module_failure_info &mfi)
-{
-#ifndef __aarch64__
-//	/* Legacy System Library Search Path */
-	char system_legacy_module_dir[PATH_MAX];
-	int ret = os_get_program_data_path(system_legacy_module_dir, sizeof(system_legacy_module_dir), "obs-studio/plugins/%module%");
-	if(ret <= 0) {
-		blog(LOG_ERROR, "Failed to get module path");
-		return;
+	std::vector<std::string> failedPlugins {};
+
+	for (size_t i = 0; i < mfi.count; ++i) {
+		const char *failedPluginName = mfi.failed_modules.array[i].array;
+		failedPlugins.emplace_back(failedPluginName);
 	}
 
-	std::string systemBinPath = system_legacy_module_dir;
-	systemBinPath += "/bin";
+	obs_module_failure_info_free(&mfi);
 
-	std::string systemDataPath = system_legacy_module_dir;
-	systemDataPath += "/data";
+	return failedPlugins;
+}
 
-	struct obs_module_path ompSystem;
-	ompSystem.module_type = LEGACY_PLUGIN;
-	ompSystem.bin = systemBinPath.c_str();
-	ompSystem.data = systemDataPath.c_str();
+std::vector<std::string> loadLegacyPluginModules()
+{
+#ifndef __aarch64__
+	/* Legacy System Library Search Path */
+	char system_legacy_module_dir[PATH_MAX];
+
+	struct obs_module_failure_info mfi;
+	obs_module_failure_info_init(&mfi);
 	
-	obs_load_plugins(&ompSystem, &mfi);
+	int ret = os_get_program_data_path(system_legacy_module_dir, sizeof(system_legacy_module_dir), "obs-studio/plugins/%module%");
+	if(ret > 0) {
+		std::string systemBinPath = system_legacy_module_dir;
+		systemBinPath += "/bin";
 
+		std::string systemDataPath = system_legacy_module_dir;
+		systemDataPath += "/data";
+
+		struct obs_module_path ompSystem;
+		ompSystem.module_type = LEGACY_PLUGIN;
+		ompSystem.bin = systemBinPath.c_str();
+		ompSystem.data = systemDataPath.c_str();
+		
+		obs_load_plugins(&ompSystem, &mfi);
+	}
 	/* Legacy User Application Support Search Path */
 	char user_legacy_module_dir[PATH_MAX];
 	ret = os_get_config_path(user_legacy_module_dir, sizeof(user_legacy_module_dir), "obs-studio/plugins/%module%");
-	if(ret <= 0) {
-		blog(LOG_ERROR, "Failed to get module path");
-		return;
+	if(ret > 0) {
+		std::string userBinPath = user_legacy_module_dir;
+		userBinPath += "/bin";
+
+		std::string userDataPath = user_legacy_module_dir;
+		userDataPath += "/data";
+
+		struct obs_module_path ompUser;
+		ompUser.module_type = LEGACY_PLUGIN;
+		ompUser.bin = userBinPath.c_str();
+		ompUser.data = userDataPath.c_str();
+		
+		obs_load_plugins(&ompUser, &mfi);
 	}
 
-	std::string userBinPath = user_legacy_module_dir;
-	userBinPath += "/bin";
+	std::vector<std::string> failedPlugins{};
 
-	std::string userDataPath = user_legacy_module_dir;
-	userDataPath += "/data";
+	for (size_t i = 0; i < mfi.count; ++i) {
+		const char *failedPluginName = mfi.failed_modules.array[i].array;
+		failedPlugins.emplace_back(failedPluginName);
+	}
 
-	struct obs_module_path ompUser;
-	ompUser.module_type = LEGACY_PLUGIN;
-	ompUser.bin = userBinPath.c_str();
-	ompUser.data = userDataPath.c_str();
-	
-	obs_load_plugins(&ompUser, &mfi);
+	obs_module_failure_info_free(&mfi);
+
+	return failedPlugins;
 #else
-	UNUSED_PARAMETER(mfi);
+	return {};
 #endif
 }
 
-void loadAdditionalLegacyPluginModules(struct obs_module_failure_info &mfi)
+std::vector<std::string> loadAdditionalLegacyPluginModules()
 {
 	char *bin_path = getenv("OBS_LEGACY_PLUGINS_PATH");
 	char *data_path = getenv("OBS_LEGACY_PLUGINS_DATA_PATH");
 	
 	if (!bin_path || !data_path) {
-	    return;
+	    return {};
 	}
 
 	std::string bin = bin_path;
@@ -143,6 +184,20 @@ void loadAdditionalLegacyPluginModules(struct obs_module_failure_info &mfi)
 	omp.module_type = PLUGIN;
 	omp.bin = bin.c_str();
 	omp.data = data.c_str();
+
+	struct obs_module_failure_info mfi;
+	obs_module_failure_info_init(&mfi);
 	
 	obs_load_plugins(&omp, &mfi);
+
+	std::vector<std::string> failedPlugins{};
+
+	for (size_t i = 0; i < mfi.count; ++i) {
+		const char *failedPluginName = mfi.failed_modules.array[i].array;
+		failedPlugins.emplace_back(failedPluginName);
+	}
+
+	obs_module_failure_info_free(&mfi);
+
+	return failedPlugins;
 }
