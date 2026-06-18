@@ -707,6 +707,15 @@ static void set_gpu_converted_data(struct video_frame *output, const struct vide
 
 		break;
 	}
+	case VIDEO_FORMAT_V210: {
+		const uint32_t width_aligned = (info->width + 47) & -48;
+		const uint32_t width = ((width_aligned + 5) / 6) * 16;
+		const uint32_t height = info->height;
+
+		set_gpu_converted_plane(width, height, input->linesize[0], output->linesize[0], input->data[0], output->data[0]);
+
+		break;
+	}
 	case VIDEO_FORMAT_P216: {
 		const uint32_t width_x2 = info->width * 2;
 		const uint32_t height = info->height;
@@ -748,7 +757,6 @@ static void set_gpu_converted_data(struct video_frame *output, const struct vide
 	case VIDEO_FORMAT_YUVA:
 	case VIDEO_FORMAT_YA2L:
 	case VIDEO_FORMAT_AYUV:
-	case VIDEO_FORMAT_V210:
 	case VIDEO_FORMAT_R10L:
 		/* unimplemented */
 		;
