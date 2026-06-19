@@ -371,8 +371,14 @@ static void render_convert_texture(struct obs_core_video_mix *video, gs_texture_
 		gs_effect_set_vec4(color_vec0, &vec0);
 		gs_effect_set_float(sdr_white_nits_over_maximum, multiplier);
 		gs_effect_set_float(hdr_lw, hdr_nominal_peak_level);
-		render_convert_plane(effect, convert_textures[0], video->conversion_techs[0]);
 
+		// Needed for v210 conversion
+		if (!convert_textures[1]) {
+			gs_effect_set_vec4(color_vec1, &vec1);
+			gs_effect_set_vec4(color_vec2, &vec2);
+		}
+
+		render_convert_plane(effect, convert_textures[0], video->conversion_techs[0]);
 		if (convert_textures[1]) {
 			gs_effect_set_texture(image, texture);
 			gs_effect_set_vec4(color_vec1, &vec1);

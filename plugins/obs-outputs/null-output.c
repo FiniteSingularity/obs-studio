@@ -76,7 +76,7 @@ static bool null_output_start_raw(void *data)
 	if (context->stop_thread_active)
 		pthread_join(context->stop_thread, NULL);
 
-	context->f = os_fopen("test.v210", "wb");
+	context->f = os_fopen("D:\\Videos\\v210test\\test.v210", "wb");
 	if (!context->f)
 		return false;
 
