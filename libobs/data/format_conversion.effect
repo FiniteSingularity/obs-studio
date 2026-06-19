@@ -385,125 +385,68 @@ float2 PS_P010_SRGB_UV_Wide(FragTexWide frag_in) : TARGET
 	return uv;
 }
 
-float3 compute_v210(float2 pos)
+// Pure per-pixel / per-pair color conversion. No packing knowledge.
+float ToY (float3 rgb) { return dot(rgb, float3(0.2126, 0.7152, 0.0722)); }
+
+float Luma10(float3 rgb) {
+	float y = ToY(rgb);
+	return clamp(round(y * 876.0 + 64.0), 0.0, 1023.0);
+}
+
+float Cb10(float3 a, float3 b) {          // averaged over a pair
+	float3 rgb = 0.5 * (a + b);
+	float cb = (rgb.b - ToY(rgb)) / 1.8556;
+	return clamp(round(cb * 896.0 + 512.0), 0.0, 1023.0);
+}
+
+float Cr10(float3 a, float3 b) {
+	float3 rgb = 0.5 * (a + b);
+	float cr = (rgb.r - ToY(rgb)) / 1.5748;
+	return clamp(round(cr * 896.0 + 512.0), 0.0, 1023.0);
+}
+
+// Pack three 10-bit code values into the R10G10B10A2 target (alpha = padding).
+float4 Pack(float c0, float c1, float c2) {
+	return float4(c0, c1, c2, 0.0) / float4(1023.0, 1023.0, 1023.0, 3.0);
+}
+
+float4 PackWordFromBlock(uint wInBlk, float3 p0, float3 p1, float3 p2, float3 p3, float3 p4, float3 p5)
 {
-	uint x = uint(pos.x)
-	uint word_x = x % 4u;
-	float3 ret;
-
-	if (word_x == 0u)
-	{
-		float3 pix0_rgb = image.Load(int3(x, pos.y, 0)).rgb;
-		ret.x = pix0_rgb.x;
-		ret.y = pix0_rgb.y;
-		ret.z = pix0_rgb.z;
-	}
-	else if (word_x == 1u)
-	{
-		float2 pix3_rb = image.Load(int3(x + 2u, pos.y, 0)).rg;
-		ret.x = image.Load(int3(x + 1u, pos.y, 0)).g;
-		ret.y = pix3_rb.x;
-		ret.z = pix3_rb.y;
-	}
-	else if (word_x == 2u)
-	{
-		ret.x = image.Load(int3(x + 2u, pos.y, 0)).b;
-		ret.y = image.Load(int3(x + 3u, pos.y, 0)).g;
-		ret.z = image.Load(int3(x + 4u, pos.y, 0)).r;
-	}
-	else
-	{
-		float2 pix4_gb = image.Load(int3(x + 4u, pos.y, 0)).gb;
-		ret.x = pix4_gb.x;
-		ret.y = pix4_gb.y;
-		ret.z = image.Load(int3(x + 5u, pos.y, 0)).g;
-	}
-
-
-
-
-
-
-
-
-
-
-
-
-	uint x = uint(pos.x);
-	uint packed_x = x % 6u;
-	uint base_x = x / 6u * 4u;
-	float y, cb, cr;
-	if (packed_x == 0u)
-	{
-		float3 word0_rgb = image.Load(int3(base_x, pos.y, 0)).rgb;
-		y = word0_rgb.y;
-		cb = word0_rgb.x;
-		cr = word0_rgb.z;
-	}
-	else if (packed_x == 1u)
-	{
-		float2 word0_rb = image.Load(int3(base_x, pos.y, 0)).rb;
-		float2 word1_rg = image.Load(int3(base_x + 1u, pos.y, 0)).rg;
-		y = word1_rg.x;
-		cb = (word0_rb.x + word1_rg.y) * 0.5;
-		cr = (word0_rb.y + image.Load(int3(base_x + 2u, pos.y, 0)).r) * 0.5;
-	}
-	else if (packed_x == 2u)
-	{
-		float2 word1_gb = image.Load(int3(base_x + 1u, pos.y, 0)).gb;
-		y = word1_gb.y;
-		cb = word1_gb.x;
-		cr = image.Load(int3(base_x + 2u, pos.y, 0)).r;
-	}
-	else if (packed_x == 3u)
-	{
-		float2 word2_rb = image.Load(int3(base_x + 2u, pos.y, 0)).rb;
-		y = image.Load(int3(base_x + 2u, pos.y, 0)).g;
-		cb = (image.Load(int3(base_x + 1u, pos.y, 0)).g + word2_rb.y) * 0.5;
-		cr = (word2_rb.x + image.Load(int3(base_x + 3u, pos.y, 0)).g) * 0.5;
-	}
-	else if (packed_x == 4u)
-	{
-		float2 word3_rg = image.Load(int3(base_x + 3u, pos.y, 0)).rg;
-		y = word3_rg.x;
-		cb = image.Load(int3(base_x + 2u, pos.y, 0)).b;
-		cr = word3_rg.y;
-	}
-	else
-	{
-		float2 word3_gb = image.Load(int3(base_x + 3u, pos.y, 0)).gb;
-		y = word3_gb.y;
-		cb = image.Load(int3(base_x + 2u, pos.y, 0)).b;
-		cr = word3_gb.x;
-		uint base_x_4 = base_x + 4u;
-		if ((pos.x + 1.) < width)
-		{
-			float2 word4_gb = image.Load(int3(base_x + 4u, pos.y, 0)).rb;
-			cb = (cb + word4_gb.x) * 0.5;
-			cr = (cr + word4_gb.y) * 0.5;
-		}
-	}
-	float3 yuv_65535 = floor(float3(y, cb, cr) * 65535. + 0.5);
-	float3 yuv_1023 = floor(yuv_65535 * 0.015625);
-	float3 yuv = yuv_1023 / 1023.;
-	float3 rgb = YUV_to_RGB(yuv);
-	return rgb;
+	if (wInBlk == 0)
+		return Pack(Cb10(p0,p1), Luma10(p0), Cr10(p0,p1));
+	if (wInBlk == 1)
+		return Pack(Luma10(p1), Cb10(p2,p3), Luma10(p2));
+	if (wInBlk == 2)
+		return Pack(Cr10(p2,p3), Luma10(p3), Cb10(p4,p5));
+	return Pack(Luma10(p4), Cr10(p4,p5), Luma10(p5));
 }
 
 float4 PS_V210_PQ_YUV_709_2020(FragPos frag_in) : TARGET
 {
-
+	return float4(0., 0., 0., 1.);
 }
 
 float4 PS_V210_HLG_YUV_709_2020(FragPos frag_in) : TARGET
 {
+	return float4(0., 0., 0., 1.);
 
 }
 
 float4 PS_V210_SRGB_YUV(FragPos frag_in) : TARGET
 {
+	uint wordX = frag_in.pos.x;
+	uint row = frag_in.pos.y;
+	uint block = wordX / 4u;
+	uint wordInBlock = wordX % 4u;
+	uint base = block * 6u;
 
+	float3 p0 = srgb_linear_to_nonlinear(image.Load(int3(min(base+0, width-1), row, 0)).rgb);
+	float3 p1 = srgb_linear_to_nonlinear(image.Load(int3(min(base+1, width-1), row, 0)).rgb);
+	float3 p2 = srgb_linear_to_nonlinear(image.Load(int3(min(base+2, width-1), row, 0)).rgb);
+	float3 p3 = srgb_linear_to_nonlinear(image.Load(int3(min(base+3, width-1), row, 0)).rgb);
+	float3 p4 = srgb_linear_to_nonlinear(image.Load(int3(min(base+4, width-1), row, 0)).rgb);
+	float3 p5 = srgb_linear_to_nonlinear(image.Load(int3(min(base+5, width-1), row, 0)).rgb);
+	return PackWordFromBlock(wordInBlock, p0, p1, p2, p3, p4, p5);
 }
 
 float2 PS_P216_PQ_UV_709_2020_Wide(FragTexWide frag_in) : TARGET
